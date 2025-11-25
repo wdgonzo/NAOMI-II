@@ -4,7 +4,8 @@
       "Bash(python tests/test_comprehensive.py:*)",
       "Bash(mkdir:*)",
       "Bash(python tests/test_graph.py:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(pip install:*)"
     ],
     "deny": [],
     "ask": []

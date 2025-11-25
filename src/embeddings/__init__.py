@@ -12,6 +12,8 @@ This module provides:
 from .anchors import AnchorDimensions, get_anchor_vector
 from .encoder import encode_hypothesis, compose_tree
 from .model import EmbeddingModel
+from .constraints import ConstraintLoss, FuzzyConstraint
+from .training import train_embeddings, generate_training_corpus
 
 __all__ = [
     'AnchorDimensions',
@@ -19,4 +21,8 @@ __all__ = [
     'encode_hypothesis',
     'compose_tree',
     'EmbeddingModel',
+    'ConstraintLoss',
+    'FuzzyConstraint',
+    'train_embeddings',
+    'generate_training_corpus',
 ]
