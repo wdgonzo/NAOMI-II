@@ -173,25 +173,25 @@ def extract_semantic_relations(synsets_data: Dict) -> Dict:
                 relations['hypernym'].append((word, hypernym_word))
 
         # Hyponyms
-        for hyponym_id in synsets_data['hyponyms']:
+        for hyponym_id in synset_info['hyponyms']:
             if hyponym_id in synsets_data:
                 hyponym_word = synsets_data[hyponym_id]['lemmas'][0].lower()
                 relations['hyponym'].append((word, hyponym_word))
 
         # Meronyms
-        for meronym_id in synsets_data['meronyms']:
+        for meronym_id in synset_info['meronyms']:
             if meronym_id in synsets_data:
                 meronym_word = synsets_data[meronym_id]['lemmas'][0].lower()
                 relations['meronym'].append((word, meronym_word))
 
         # Holonyms
-        for holonym_id in synsets_data['holonyms']:
+        for holonym_id in synset_info['holonyms']:
             if holonym_id in synsets_data:
                 holonym_word = synsets_data[holonym_id]['lemmas'][0].lower()
                 relations['holonym'].append((word, holonym_word))
 
         # Similar
-        for similar_id in synsets_data['similar']:
+        for similar_id in synset_info['similar']:
             if similar_id in synsets_data:
                 similar_word = synsets_data[similar_id]['lemmas'][0].lower()
                 relations['similar'].append((word, similar_word))

@@ -31,6 +31,7 @@ import time
 
 from src.embeddings.device import DeviceManager
 from src.embeddings.anchors import AnchorDimensions
+from src.embeddings.dynamic_dimensions import adaptive_dimension_management
 
 
 class DistanceConstraintDataset(Dataset):
@@ -62,6 +63,7 @@ class DistanceConstraintDataset(Dataset):
 def create_relation_distance_map():
     """Map relation types to target distance ranges."""
     return {
+        # Numeric IDs (original parse-based relations)
         0: 0.1,   # synonym
         1: 0.3,   # hypernym
         2: 0.3,   # hyponym
@@ -73,6 +75,13 @@ def create_relation_distance_map():
         8: 0.4,
         9: 0.5,
         10: 0.5,
+        # String IDs (WordNet-based relations)
+        'hypernym': 0.3,
+        'hyponym': 0.3,
+        'similar': 0.2,
+        'meronym': 0.5,
+        'holonym': 0.5,
+        'antonym': 1.0,
     }
 
 
@@ -579,9 +588,17 @@ def main():
     parser.add_argument('--epochs', type=int, default=50, help='Number of training epochs')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
     parser.add_argument('--batch-size', type=int, default=32, help='Batch size')
-    parser.add_argument('--embedding-dim', type=int, default=128, help='Embedding dimensionality')
+    parser.add_argument('--embedding-dim', type=int, default=128, help='Starting embedding dimensionality')
+    parser.add_argument('--training-data', type=str, default='data/training',
+                       help='Directory containing training data')
     parser.add_argument('--unsupervised', action='store_true',
                        help='Skip manual dimension assignments (use distance + sparsity only)')
+    parser.add_argument('--dynamic-dims', action='store_true',
+                       help='Enable dynamic dimension expansion during training')
+    parser.add_argument('--max-dims', type=int, default=512,
+                       help='Maximum dimensions when using --dynamic-dims')
+    parser.add_argument('--expand-interval', type=int, default=10,
+                       help='Check for dimension expansion every N epochs')
 
     args = parser.parse_args()
 
@@ -591,7 +608,7 @@ def main():
     print()
 
     # Configuration
-    TRAINING_DATA_DIR = Path("data/training")
+    TRAINING_DATA_DIR = Path(args.training_data)
     OUTPUT_DIR = Path("checkpoints")
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -698,6 +715,9 @@ def main():
 
     # Training loop
     print("[6/7] Training...")
+    if args.dynamic_dims:
+        print(f"  Dynamic dimensions enabled: {args.embedding_dim} -> max {args.max_dims}")
+        print(f"  Expansion check interval: every {args.expand_interval} epochs")
     print()
     best_val_loss = float('inf')
     start_time = time.time()
@@ -727,6 +747,25 @@ def main():
             sparsity_pct = 100.0 * np.mean(np.abs(embeddings_np) < 0.01)
             print(f"  Sparsity: {sparsity_pct:.1f}% (target: 40-70%)")
 
+        # Dynamic dimension management
+        if args.dynamic_dims:
+            with torch.no_grad():
+                embeddings_np_current = model().cpu().numpy()
+                embeddings_np_current, model, did_expand = adaptive_dimension_management(
+                    model=model,
+                    embeddings=embeddings_np_current,
+                    epoch=epoch,
+                    max_dims=args.max_dims,
+                    check_interval=args.expand_interval,
+                    sparsity_threshold=0.3,
+                    expand_by=16
+                )
+
+                # If dimensions were expanded, reinitialize optimizer
+                if did_expand:
+                    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+                    print(f"  Reinitialized optimizer with new dimensions")
+
         if epoch % 10 == 0:
             save_checkpoint(model, optimizer, epoch, val_losses['total'],
                           OUTPUT_DIR / f"checkpoint_epoch_{epoch}.pt")
@@ -751,14 +790,20 @@ def main():
     np.save(OUTPUT_DIR / "embeddings.npy", final_embeddings)
     print(f"  Saved embeddings to {OUTPUT_DIR / 'embeddings.npy'}")
 
+    # Get final embedding dimension (may have changed if dynamic dims enabled)
+    final_embedding_dim = final_embeddings.shape[1]
+
     with open(OUTPUT_DIR / "vocabulary.json", 'w', encoding='utf-8') as f:
         json.dump({
             'word_to_id': word_to_id,
             'id_to_word': id_to_word,
             'vocab_size': vocab_size,
-            'embedding_dim': args.embedding_dim
+            'embedding_dim': final_embedding_dim,
+            'starting_dim': args.embedding_dim,
+            'dynamic_dims_enabled': args.dynamic_dims
         }, f, indent=2, ensure_ascii=False)
     print(f"  Saved vocabulary to {OUTPUT_DIR / 'vocabulary.json'}")
+    print(f"  Final embedding dimensions: {final_embedding_dim} (started with {args.embedding_dim})")
     print()
 
     print("=" * 70)

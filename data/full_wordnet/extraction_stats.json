@@ -1,0 +1,20 @@
+{
+  "total_synsets": 117659,
+  "total_antonym_pairs": 3992,
+  "total_base_words": 157300,
+  "total_sense_tagged_words": 157306,
+  "pos_distribution": {
+    "a": 8324,
+    "s": 15168,
+    "r": 4481,
+    "n": 117798,
+    "v": 11529
+  },
+  "relation_counts": {
+    "hypernym": 89089,
+    "hyponym": 89089,
+    "meronym": 22187,
+    "holonym": 22187,
+    "similar": 21386
+  }
+}
