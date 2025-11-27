@@ -1,0 +1,226 @@
+{
+  "morality": [
+    [
+      "good_wn.00_a",
+      "bad_wn.00_a"
+    ],
+    [
+      "right_wn.00_n",
+      "wrong_wn.00_n"
+    ],
+    [
+      "left_wn.00_a",
+      "right_wn.00_n"
+    ],
+    [
+      "bad_wn.00_a",
+      "goods_wn.03_n"
+    ],
+    [
+      "badly_wn.00_r",
+      "well_wn.04_n"
+    ],
+    [
+      "bad_wn.00_a",
+      "good_wn.00_a"
+    ],
+    [
+      "correct_n",
+      "wrong_wn.00_n"
+    ],
+    [
+      "left_wn.00_a",
+      "rights_wn.00_n"
+    ]
+  ],
+  "temperature": [],
+  "size": [
+    [
+      "big_wn.00_a",
+      "small_wn.00_a"
+    ],
+    [
+      "big_wn.00_a",
+      "little_wn.00_n"
+    ],
+    [
+      "enlarged_wn.00_v",
+      "reduce_n"
+    ],
+    [
+      "large_wn.00_n",
+      "small_wn.00_a"
+    ],
+    [
+      "largest_n",
+      "small_wn.00_a"
+    ],
+    [
+      "largest_n",
+      "little_wn.00_n"
+    ],
+    [
+      "enlarge_n",
+      "reduce_n"
+    ],
+    [
+      "biggest_n",
+      "small_wn.00_a"
+    ],
+    [
+      "biggest_n",
+      "little_wn.00_n"
+    ],
+    [
+      "bigger_n",
+      "small_wn.00_a"
+    ],
+    [
+      "bigger_n",
+      "little_wn.00_n"
+    ],
+    [
+      "large_wn.00_n",
+      "little_wn.00_n"
+    ]
+  ],
+  "speed": [],
+  "emotion_positive_negative": [
+    [
+      "enjoy_n",
+      "suffered_wn.00_v"
+    ]
+  ],
+  "light_dark": [
+    [
+      "heavy_wn.00_n",
+      "light_wn.00_a"
+    ]
+  ],
+  "strength": [
+    [
+      "strength_wn.00_n",
+      "weakness_wn.02_n"
+    ]
+  ],
+  "difficulty": [
+    [
+      "easy_n",
+      "hard_n"
+    ],
+    [
+      "difficult_n",
+      "easy_n"
+    ]
+  ],
+  "quantity": [
+    [
+      "many_n",
+      "few_wn.00_n"
+    ],
+    [
+      "fewer_n",
+      "more_wn.00_n"
+    ],
+    [
+      "fewer_n",
+      "many_n"
+    ],
+    [
+      "few_wn.00_n",
+      "many_n"
+    ]
+  ],
+  "age": [
+    [
+      "young_wn.00_a",
+      "old_wn.00_a"
+    ],
+    [
+      "engaged_wn.00_v",
+      "fire_wn.00_n"
+    ],
+    [
+      "new_wn.01_a",
+      "old_wn.00_a"
+    ],
+    [
+      "aged_wn.00_v",
+      "young_wn.00_a"
+    ],
+    [
+      "discourage_n",
+      "encouraging_wn.00_v"
+    ],
+    [
+      "old_wn.00_a",
+      "young_wn.00_a"
+    ],
+    [
+      "discourage_n",
+      "encourage_n"
+    ],
+    [
+      "hold_wn.03_n",
+      "released_wn.00_v"
+    ],
+    [
+      "old_wn.00_a",
+      "younger_n"
+    ],
+    [
+      "advantage_wn.00_n",
+      "penalty_wn.03_n"
+    ],
+    [
+      "aged_wn.00_v",
+      "youth_wn.02_n"
+    ]
+  ],
+  "distance": [
+    [
+      "near_n",
+      "far_wn.00_n"
+    ],
+    [
+      "close_wn.09_v",
+      "opened_wn.00_v"
+    ],
+    [
+      "far_wn.00_n",
+      "near_n"
+    ]
+  ],
+  "quality": [
+    [
+      "good_wn.00_a",
+      "bad_wn.00_a"
+    ]
+  ],
+  "wealth": [],
+  "knowledge": [
+    [
+      "acknowledge_n",
+      "deny_n"
+    ]
+  ],
+  "safety": [
+    [
+      "danger_wn.00_n",
+      "safety_wn.00_n"
+    ]
+  ],
+  "truth": [
+    [
+      "true_wn.00_n",
+      "false_n"
+    ],
+    [
+      "false_n",
+      "true_wn.00_n"
+    ]
+  ],
+  "activity": [],
+  "visibility": [],
+  "orientation": []
+}

@@ -1,0 +1,12 @@
+{
+  "total_sentences": 390,
+  "parsed_successfully": 390,
+  "parse_failures": 0,
+  "total_triples": 1170,
+  "wordnet_words": 42,
+  "wordnet_edges": 924,
+  "vocab_size": 852,
+  "training_edges": 2094,
+  "graph_nodes": 852,
+  "graph_edges": 2094
+}

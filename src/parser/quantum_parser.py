@@ -16,6 +16,7 @@ from .dsl import Grammar, Rule, load_grammar
 from .matcher import find_matches, Match
 from .scorer import score_hypothesis
 from .enums import ConnectionType
+from .normalizer import normalize_hypothesis
 
 
 class QuantumParser:
@@ -156,6 +157,17 @@ class QuantumParser:
         complete_hypotheses = [h for h in chart.hypotheses if len(h.get_unconsumed()) == 1]
         if complete_hypotheses:
             chart.hypotheses = complete_hypotheses
+
+        # Normalize hypotheses (add implied elements)
+        chart.hypotheses = [normalize_hypothesis(h) for h in chart.hypotheses]
+
+        # Re-score after normalization
+        for hyp in chart.hypotheses:
+            if hyp:
+                hyp.score = score_hypothesis(hyp, chart.embeddings)
+
+        # Re-sort after normalization and rescoring
+        chart.sort_hypotheses()
 
         return chart
 

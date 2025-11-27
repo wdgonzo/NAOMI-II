@@ -1,0 +1,25 @@
+{
+  "_comment": "Maps antonym types to specific embedding dimensions for selective polarity",
+  "_note": "Each antonym type opposes on its assigned dimension(s) only",
+
+  "morality": [0],
+  "temperature": [1],
+  "size": [2],
+  "speed": [3],
+  "emotion_positive_negative": [4],
+  "light_dark": [5],
+  "strength": [6],
+  "difficulty": [7],
+  "quantity": [8],
+  "age": [9],
+  "distance": [10],
+  "quality": [11],
+  "wealth": [12],
+  "knowledge": [13],
+  "safety": [14],
+  "truth": [15],
+  "activity": [16],
+  "visibility": [17],
+  "orientation": [18],
+  "direction": [19, 20, 21]
+}

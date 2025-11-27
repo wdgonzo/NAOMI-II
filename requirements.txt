@@ -20,6 +20,12 @@ pandas>=2.0.0
 # Progress bars
 tqdm>=4.65.0
 
+# Deep Learning (PyTorch for RNN training)
+# Note: DirectML (NPU) support for Python 3.14+ is limited
+# The code supports NPU via DirectML if available, otherwise uses CPU/CUDA
+torch>=2.0.0
+# torch-directml  # Install separately if available for your Python version
+
 # Optional: If using JAX for autodiff
 # jax>=0.4.0
 # jaxlib>=0.4.0

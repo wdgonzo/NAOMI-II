@@ -129,6 +129,7 @@ def _get_head_word(node: Node, hypothesis: Hypothesis) -> str:
 
     For leaf nodes with word values, returns the word text.
     For constituent nodes, finds the head child recursively.
+    For EQUIVALENCE predicates (single nouns), returns special marker.
 
     Args:
         node: The node to extract head word from
@@ -137,6 +138,11 @@ def _get_head_word(node: Node, hypothesis: Hypothesis) -> str:
     Returns:
         Head word as string
     """
+    # Check if this is an EQUIVALENCE predicate (from single noun normalization)
+    from ..parser.enums import SubType
+    if hasattr(node, 'flags') and SubType.EQUIVALENCE in node.flags:
+        return "[EQUIVALENCE]"  # Logical operator, not a word
+
     # If node has a word value, return it
     if node.value and hasattr(node.value, 'text'):
         return node.value.text

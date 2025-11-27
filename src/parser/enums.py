@@ -158,6 +158,8 @@ class SubType(Enum):
     NEGATIVE = auto()      # Negation marking
     INFINITIVE = auto()    # Infinitive marker
     PARTICIPLE = auto()    # Present/past participle
+    PAST_PARTICIPLE = auto()  # Past participle specifically
+    EQUIVALENCE = auto()   # Equivalence/identity predicate (for single nouns)
 
     # Adjective position (for Spanish)
     POST_NOMINAL = auto()   # Adjective comes after noun

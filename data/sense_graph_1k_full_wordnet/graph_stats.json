@@ -1,0 +1,6 @@
+{
+  "vocabulary_size": 5290,
+  "num_triples": 40874,
+  "num_training_examples": 23262,
+  "num_sentences": 1000
+}

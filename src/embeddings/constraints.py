@@ -16,10 +16,373 @@ Constraint types:
 """
 
 import numpy as np
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 
 from ..graph.knowledge_graph import KnowledgeGraph, GraphEdge
+
+
+class SparsityLoss:
+    """
+    L1 sparsity regularization to encourage sparse embeddings.
+
+    Penalizes non-zero values in embeddings, encouraging words to only
+    activate dimensions that are relevant to their meaning.
+
+    Goal: Achieve 40-70% sparsity (40-70% of values near zero).
+
+    Attributes:
+        l1_weight: Regularization strength (higher = more sparse)
+    """
+
+    def __init__(self, l1_weight: float = 0.01):
+        """
+        Initialize sparsity loss.
+
+        Args:
+            l1_weight: L1 regularization strength (0.001-0.1 typical range)
+        """
+        self.l1_weight = l1_weight
+
+    def __call__(self, embeddings: np.ndarray) -> float:
+        """
+        Compute L1 sparsity loss.
+
+        Args:
+            embeddings: Word embedding matrix (vocab_size x embedding_dim)
+
+        Returns:
+            Sparsity loss value (higher = more non-zero values)
+        """
+        return self.l1_weight * np.mean(np.abs(embeddings))
+
+    def compute_sparsity(self, embeddings: np.ndarray, threshold: float = 0.01) -> float:
+        """
+        Compute current sparsity percentage.
+
+        Args:
+            embeddings: Word embedding matrix
+            threshold: Values below this are considered "zero"
+
+        Returns:
+            Sparsity percentage (0-100)
+        """
+        near_zero = np.abs(embeddings) < threshold
+        return 100.0 * np.mean(near_zero)
+
+
+class SelectivePolarityLoss:
+    """
+    Selective polarity constraint for antonyms.
+
+    Different antonym types oppose on different specific dimensions:
+    - good/bad oppose on dimension 0 (morality)
+    - hot/cold oppose on dimension 1 (temperature)
+    - big/small oppose on dimension 2 (size)
+    - etc.
+
+    This creates interpretable, structured semantic space where
+    dimensions have consistent meaning across all words.
+
+    Goal: Each antonym pair opposes on 1-10 dimensions (not all 128!).
+    """
+
+    def __init__(self, antonym_dimension_map: Dict[Tuple[str, str], List[int]],
+                 polarity_weight: float = 1.0,
+                 similarity_weight: float = 0.5):
+        """
+        Initialize selective polarity loss.
+
+        Args:
+            antonym_dimension_map: Maps (word1, word2) -> list of dimensions
+                Example: {('good', 'bad'): [0], ('hot', 'cold'): [1]}
+            polarity_weight: Weight for opposition on assigned dimensions
+            similarity_weight: Weight for similarity on other dimensions
+        """
+        self.antonym_dimension_map = antonym_dimension_map
+        self.polarity_weight = polarity_weight
+        self.similarity_weight = similarity_weight
+
+    def __call__(self, embeddings: np.ndarray, word_to_id: Dict[str, int]) -> float:
+        """
+        Compute selective polarity loss.
+
+        Args:
+            embeddings: Word embedding matrix (vocab_size x embedding_dim)
+            word_to_id: Maps words to embedding indices
+
+        Returns:
+            Total selective polarity loss
+        """
+        total_loss = 0.0
+        num_pairs = 0
+
+        for (word1, word2), assigned_dims in self.antonym_dimension_map.items():
+            # Get word IDs
+            id1 = word_to_id.get(word1.lower())
+            id2 = word_to_id.get(word2.lower())
+
+            if id1 is None or id2 is None:
+                continue
+
+            vec1 = embeddings[id1]
+            vec2 = embeddings[id2]
+
+            # 1. Polarity constraint on ASSIGNED dimensions only
+            polarity_loss = 0.0
+            for dim in assigned_dims:
+                val1 = vec1[dim]
+                val2 = vec2[dim]
+
+                sign_product = np.sign(val1) * np.sign(val2)
+
+                if sign_product > 0:
+                    # Same sign - penalty
+                    polarity_loss += (abs(val1) + abs(val2))
+                elif sign_product < 0:
+                    # Opposite signs - reward
+                    polarity_loss -= (abs(val1) + abs(val2)) * 0.5
+                else:
+                    # One is zero - small penalty
+                    polarity_loss += 0.1
+
+            # 2. Similarity constraint on NON-ASSIGNED dimensions
+            # Antonyms should be similar on irrelevant dimensions
+            other_dims = [i for i in range(len(vec1)) if i not in assigned_dims]
+            if other_dims:
+                diff = vec1[other_dims] - vec2[other_dims]
+                similarity_loss = np.mean(diff ** 2)
+            else:
+                similarity_loss = 0.0
+
+            total_loss += self.polarity_weight * polarity_loss + self.similarity_weight * similarity_loss
+            num_pairs += 1
+
+        return total_loss / max(num_pairs, 1)
+
+    @staticmethod
+    def from_config_files(antonym_types_path: str,
+                         dimension_assignments_path: str) -> 'SelectivePolarityLoss':
+        """
+        Create SelectivePolarityLoss from config files.
+
+        Args:
+            antonym_types_path: Path to antonym_types.json
+            dimension_assignments_path: Path to dimension_assignments.json
+
+        Returns:
+            Configured SelectivePolarityLoss instance
+        """
+        import json
+
+        # Load antonym types
+        with open(antonym_types_path, 'r') as f:
+            antonym_types = json.load(f)
+
+        # Load dimension assignments
+        with open(dimension_assignments_path, 'r') as f:
+            dimension_assignments = json.load(f)
+            # Remove comments
+            dimension_assignments = {k: v for k, v in dimension_assignments.items()
+                                    if not k.startswith('_')}
+
+        # Build antonym-dimension map
+        antonym_dimension_map = {}
+        for atype, pairs in antonym_types.items():
+            if atype in dimension_assignments:
+                dims = dimension_assignments[atype]
+                for word1, word2 in pairs:
+                    antonym_dimension_map[(word1, word2)] = dims
+
+        return SelectivePolarityLoss(antonym_dimension_map)
+
+
+class DimensionalConsistencyLoss:
+    """
+    Enforces dimensional consistency across all words.
+
+    Ensures that each dimension has consistent meaning for ALL words:
+    - Dimension 0 = morality for EVERY word (not just good/bad)
+    - Dimension 1 = gender for EVERY word
+    - Dimension 2 = size for EVERY word
+    - etc.
+
+    This creates interpretable semantic space where dimensions are transparent.
+
+    Example:
+        - All moral words (good, bad, virtue, evil) cluster on dimension 0
+        - Moral words have high |value| on dim 0, neutral words near zero
+        - Can predict: if |word[0]| > 0.5, word has moral content
+    """
+
+    def __init__(self, semantic_clusters: Dict[int, Dict[str, List[str]]],
+                 consistency_weight: float = 1.0,
+                 sparsity_weight: float = 0.5):
+        """
+        Initialize dimensional consistency loss.
+
+        Args:
+            semantic_clusters: Maps dimension index to cluster definition
+                Example: {0: {'positive': ['good'], 'negative': ['bad'], 'neutral': ['chair']}}
+            consistency_weight: Weight for clustering on target dimension
+            sparsity_weight: Weight for being zero on other dimensions
+        """
+        self.semantic_clusters = semantic_clusters
+        self.consistency_weight = consistency_weight
+        self.sparsity_weight = sparsity_weight
+
+    def __call__(self, embeddings: np.ndarray, word_to_id: Dict[str, int]) -> float:
+        """
+        Compute dimensional consistency loss.
+
+        Args:
+            embeddings: Word embedding matrix (vocab_size x embedding_dim)
+            word_to_id: Maps words to embedding indices
+
+        Returns:
+            Total consistency loss
+        """
+        total_loss = 0.0
+        num_constraints = 0
+
+        for dim_idx, cluster_def in self.semantic_clusters.items():
+            # 1. Positive pole: should have positive values on this dim
+            for word in cluster_def.get('positive', []):
+                word_id = word_to_id.get(word.lower())
+                if word_id is None:
+                    continue
+
+                vec = embeddings[word_id]
+                target_val = vec[dim_idx]
+
+                # Penalty if value is not positive
+                if target_val <= 0:
+                    total_loss += abs(target_val) + 0.1  # Penalty for wrong sign
+                else:
+                    total_loss -= target_val * 0.1  # Small reward for correct sign
+
+                # Encourage sparsity on other dimensions
+                other_dims = [i for i in range(len(vec)) if i != dim_idx]
+                if other_dims:
+                    total_loss += self.sparsity_weight * np.mean(np.abs(vec[other_dims]))
+
+                num_constraints += 1
+
+            # 2. Negative pole: should have negative values on this dim
+            for word in cluster_def.get('negative', []):
+                word_id = word_to_id.get(word.lower())
+                if word_id is None:
+                    continue
+
+                vec = embeddings[word_id]
+                target_val = vec[dim_idx]
+
+                # Penalty if value is not negative
+                if target_val >= 0:
+                    total_loss += abs(target_val) + 0.1  # Penalty for wrong sign
+                else:
+                    total_loss -= abs(target_val) * 0.1  # Small reward for correct sign
+
+                # Encourage sparsity on other dimensions
+                other_dims = [i for i in range(len(vec)) if i != dim_idx]
+                if other_dims:
+                    total_loss += self.sparsity_weight * np.mean(np.abs(vec[other_dims]))
+
+                num_constraints += 1
+
+            # 3. Neutral: should be near zero on this dim
+            for word in cluster_def.get('neutral', []):
+                word_id = word_to_id.get(word.lower())
+                if word_id is None:
+                    continue
+
+                vec = embeddings[word_id]
+                target_val = vec[dim_idx]
+
+                # Strong penalty for being non-zero
+                total_loss += abs(target_val) * 2.0
+
+                num_constraints += 1
+
+        return self.consistency_weight * (total_loss / max(num_constraints, 1))
+
+    @staticmethod
+    def from_config_file(semantic_clusters_path: str) -> 'DimensionalConsistencyLoss':
+        """
+        Create DimensionalConsistencyLoss from config file.
+
+        Args:
+            semantic_clusters_path: Path to semantic_clusters.json
+
+        Returns:
+            Configured DimensionalConsistencyLoss instance
+        """
+        import json
+
+        with open(semantic_clusters_path, 'r', encoding='utf-8') as f:
+            clusters_str = json.load(f)
+
+        # Convert string keys back to integers
+        clusters = {int(k): v for k, v in clusters_str.items()}
+
+        return DimensionalConsistencyLoss(clusters)
+
+
+@dataclass
+class PolarityConstraint:
+    """
+    Opposite-sign polarity constraint for antonyms.
+
+    Forces antonyms to have opposite signs on specific dimensions,
+    enabling compositional semantics (NOT(good) ≈ bad).
+
+    Attributes:
+        word1: First word (e.g., "good")
+        word2: Second word (e.g., "bad")
+        polarity_dims: Dimensions where opposite signs should be enforced
+        weight: Importance weight
+    """
+    word1: str
+    word2: str
+    polarity_dims: List[int]
+    weight: float = 1.0
+
+    def compute_loss(self, emb1: np.ndarray, emb2: np.ndarray) -> float:
+        """
+        Compute polarity constraint loss.
+
+        Penalizes same-sign values on polarity dimensions.
+        Rewards opposite-sign values with large magnitude.
+
+        Args:
+            emb1: First word embedding
+            emb2: Second word embedding
+
+        Returns:
+            Loss value (negative = good, positive = bad)
+        """
+        loss = 0.0
+
+        for dim_idx in self.polarity_dims:
+            val1 = emb1[dim_idx]
+            val2 = emb2[dim_idx]
+
+            # Check sign agreement
+            sign_product = np.sign(val1) * np.sign(val2)
+
+            if sign_product > 0:
+                # Same sign - penalty proportional to magnitude
+                # Larger values with same sign = worse
+                loss += (abs(val1) + abs(val2))
+            elif sign_product < 0:
+                # Opposite signs - reward proportional to magnitude
+                # Larger opposite values = better
+                loss -= (abs(val1) + abs(val2))
+            else:
+                # One value is zero - small penalty
+                loss += 0.1
+
+        return self.weight * loss
 
 
 @dataclass
@@ -70,11 +433,20 @@ class FuzzyConstraint:
 class ConstraintLoss:
     """
     Manages and computes fuzzy constraint losses for training.
+
+    Supports both distance-based and polarity-based constraints.
     """
 
-    def __init__(self):
-        """Initialize constraint loss manager."""
+    def __init__(self, polarity_dims: Optional[List[int]] = None):
+        """
+        Initialize constraint loss manager.
+
+        Args:
+            polarity_dims: Optional list of dimensions for polarity constraints
+        """
         self.constraints: List[FuzzyConstraint] = []
+        self.polarity_constraints: List[PolarityConstraint] = []
+        self.polarity_dims = polarity_dims or []
 
         # Define constraint type ranges
         self.constraint_ranges = {
@@ -137,6 +509,38 @@ class ConstraintLoss:
 
             self.add_constraint(source_word, target_word, constraint_type)
 
+    def add_polarity_constraint(self, word1: str, word2: str, weight: float = 2.0):
+        """
+        Add a polarity constraint for antonym pair.
+
+        Args:
+            word1: First word (e.g., "good")
+            word2: Second word (e.g., "bad")
+            weight: Importance weight
+        """
+        if not self.polarity_dims:
+            # No polarity dimensions configured yet
+            return
+
+        constraint = PolarityConstraint(
+            word1=word1,
+            word2=word2,
+            polarity_dims=self.polarity_dims,
+            weight=weight
+        )
+
+        self.polarity_constraints.append(constraint)
+
+    def set_polarity_dimensions(self, polarity_dims: List[int]):
+        """
+        Set or update polarity dimensions.
+
+        Args:
+            polarity_dims: List of dimension indices for polarity constraints
+        """
+        self.polarity_dims = polarity_dims
+        print(f"Set {len(polarity_dims)} polarity dimensions: {polarity_dims}")
+
     def compute_total_loss(self, model) -> Tuple[float, Dict]:
         """
         Compute total constraint loss across all constraints.
@@ -152,6 +556,7 @@ class ConstraintLoss:
         num_violated = 0
         losses_by_type = {}
 
+        # Distance-based fuzzy constraints
         for constraint in self.constraints:
             # Get embeddings
             vec1 = model.get_embedding(constraint.word1)
@@ -178,13 +583,51 @@ class ConstraintLoss:
                 losses_by_type[constraint.constraint_type] = []
             losses_by_type[constraint.constraint_type].append(loss)
 
+        # Polarity-based constraints for antonyms
+        polarity_loss = 0.0
+        num_polarity_satisfied = 0
+        num_polarity_violated = 0
+
+        for constraint in self.polarity_constraints:
+            # Get embeddings
+            vec1 = model.get_embedding(constraint.word1)
+            vec2 = model.get_embedding(constraint.word2)
+
+            if vec1 is None or vec2 is None:
+                continue
+
+            # Compute polarity loss
+            loss = constraint.compute_loss(vec1, vec2)
+            polarity_loss += loss
+            total_loss += loss
+
+            # Track statistics (negative loss = satisfied)
+            if loss <= 0.0:
+                num_polarity_satisfied += 1
+            else:
+                num_polarity_violated += 1
+
+        # Track polarity losses separately
+        if self.polarity_constraints:
+            losses_by_type['polarity_constraints'] = [polarity_loss / len(self.polarity_constraints)]
+
         # Compute statistics
+        total_constraints = len(self.constraints) + len(self.polarity_constraints)
+        total_satisfied = num_satisfied + num_polarity_satisfied
+
         stats = {
             'total_loss': total_loss,
+            'distance_loss': total_loss - polarity_loss,
+            'polarity_loss': polarity_loss,
             'num_constraints': len(self.constraints),
+            'num_polarity_constraints': len(self.polarity_constraints),
             'num_satisfied': num_satisfied,
             'num_violated': num_violated,
+            'num_polarity_satisfied': num_polarity_satisfied,
+            'num_polarity_violated': num_polarity_violated,
             'satisfaction_rate': num_satisfied / len(self.constraints) if self.constraints else 0.0,
+            'polarity_satisfaction_rate': num_polarity_satisfied / len(self.polarity_constraints) if self.polarity_constraints else 0.0,
+            'overall_satisfaction_rate': total_satisfied / total_constraints if total_constraints > 0 else 0.0,
             'losses_by_type': {k: sum(v) / len(v) for k, v in losses_by_type.items()},
         }
 
@@ -257,6 +700,8 @@ class ConstraintLoss:
 
         return {
             'total_constraints': len(self.constraints),
+            'num_polarity_constraints': len(self.polarity_constraints),
+            'polarity_dimensions': len(self.polarity_dims),
             'constraints_by_type': type_counts,
         }
 

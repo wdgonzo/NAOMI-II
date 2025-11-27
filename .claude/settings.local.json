@@ -5,7 +5,11 @@
       "Bash(mkdir:*)",
       "Bash(python tests/test_graph.py:*)",
       "Bash(python:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(pip search:*)",
+      "Bash(temp.py)",
+      "Bash(dir:*)",
+      "Bash(timeout 10 sleep:*)"
     ],
     "deny": [],
     "ask": []
