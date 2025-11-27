@@ -597,8 +597,14 @@ def main():
                        help='Enable dynamic dimension expansion during training')
     parser.add_argument('--max-dims', type=int, default=512,
                        help='Maximum dimensions when using --dynamic-dims')
-    parser.add_argument('--expand-interval', type=int, default=10,
+    parser.add_argument('--expand-interval', type=int, default=2,
                        help='Check for dimension expansion every N epochs')
+    parser.add_argument('--expand-by', type=int, default=64,
+                       help='Number of dimensions to add each expansion')
+    parser.add_argument('--patience', type=int, default=10,
+                       help='Early stopping: epochs to wait for improvement')
+    parser.add_argument('--min-delta', type=float, default=0.0001,
+                       help='Early stopping: minimum improvement to count')
 
     args = parser.parse_args()
 
@@ -647,9 +653,13 @@ def main():
     )
     print(f"  Train: {len(train_dataset)}, Validation: {len(val_dataset)}")
 
-    # Create dataloaders
+    # Create dataloaders (will be recreated if batch size changes)
+    current_batch_size = args.batch_size
+    initial_batch_size = args.batch_size
+    initial_dims = args.embedding_dim
+
     train_loader = DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0
+        train_dataset, batch_size=current_batch_size, shuffle=True, num_workers=0
     )
     val_loader = DataLoader(
         val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0
@@ -718,8 +728,11 @@ def main():
     if args.dynamic_dims:
         print(f"  Dynamic dimensions enabled: {args.embedding_dim} -> max {args.max_dims}")
         print(f"  Expansion check interval: every {args.expand_interval} epochs")
+        print(f"  Expansion amount: {args.expand_by} dims per expansion")
+    print(f"  Early stopping enabled: patience={args.patience}, min_delta={args.min_delta}")
     print()
     best_val_loss = float('inf')
+    epochs_without_improvement = 0
     start_time = time.time()
 
     for epoch in range(1, args.epochs + 1):
@@ -758,11 +771,25 @@ def main():
                     max_dims=args.max_dims,
                     check_interval=args.expand_interval,
                     sparsity_threshold=0.3,
-                    expand_by=16
+                    expand_by=args.expand_by
                 )
 
-                # If dimensions were expanded, reinitialize optimizer
+                # If dimensions were expanded, adapt batch size and reinitialize optimizer
                 if did_expand:
+                    current_dims = model.embedding_dim
+                    new_batch_size = int(initial_batch_size * (initial_dims / current_dims))
+                    new_batch_size = max(new_batch_size, 32768)  # minimum 32K batch
+
+                    if new_batch_size != current_batch_size:
+                        current_batch_size = new_batch_size
+                        train_loader = DataLoader(
+                            train_dataset, batch_size=current_batch_size, shuffle=True, num_workers=0
+                        )
+                        val_loader = DataLoader(
+                            val_dataset, batch_size=current_batch_size, shuffle=False, num_workers=0
+                        )
+                        print(f"  Adapted batch size to {current_batch_size} for {current_dims} dimensions")
+
                     optimizer = optim.Adam(model.parameters(), lr=args.lr)
                     print(f"  Reinitialized optimizer with new dimensions")
 
@@ -771,10 +798,21 @@ def main():
                           OUTPUT_DIR / f"checkpoint_epoch_{epoch}.pt")
             print(f"  Saved checkpoint")
 
-        if val_losses['total'] < best_val_loss:
+        # Early stopping check
+        if val_losses['total'] < best_val_loss - args.min_delta:
             best_val_loss = val_losses['total']
+            epochs_without_improvement = 0
             save_checkpoint(model, optimizer, epoch, val_losses['total'], OUTPUT_DIR / "best_model.pt")
             print(f"  New best model! (val_loss: {val_losses['total']:.4f})")
+        else:
+            epochs_without_improvement += 1
+            print(f"  No improvement for {epochs_without_improvement} epochs")
+
+        if epochs_without_improvement >= args.patience:
+            print(f"\n[Early Stopping] No improvement for {args.patience} epochs")
+            print(f"[Early Stopping] Best validation loss: {best_val_loss:.4f}")
+            print(f"[Early Stopping] Stopping training at epoch {epoch}")
+            break
 
         print()
 
