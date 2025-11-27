@@ -101,15 +101,18 @@ def expand_embeddings(model: nn.Module,
     """
     vocab_size, current_dims = embeddings.shape
 
+    # Preserve the original device (CPU or CUDA)
+    original_device = model.embeddings.device
+
     # Create new dimensions with small random initialization
     new_dims = np.random.randn(vocab_size, num_new_dims) * init_scale
 
     # Concatenate to existing embeddings
     expanded_embeddings = np.concatenate([embeddings, new_dims], axis=1)
 
-    # Update model's embedding parameter
+    # Update model's embedding parameter (preserve device)
     model.embeddings = nn.Parameter(
-        torch.from_numpy(expanded_embeddings).float()
+        torch.from_numpy(expanded_embeddings).float().to(original_device)
     )
 
     # Update model's embedding_dim attribute
@@ -183,6 +186,9 @@ def prune_unused_dimensions(embeddings: np.ndarray,
     """
     dim_sparsity = compute_dimension_sparsity(embeddings, epsilon)
 
+    # Preserve the original device (CPU or CUDA)
+    original_device = model.embeddings.device
+
     # Find dimensions to keep (above minimum sparsity)
     kept_dims = dim_sparsity >= min_sparsity
     kept_indices = np.where(kept_dims)[0]
@@ -190,9 +196,9 @@ def prune_unused_dimensions(embeddings: np.ndarray,
     # Prune embeddings
     pruned_embeddings = embeddings[:, kept_dims]
 
-    # Update model
+    # Update model (preserve device)
     model.embeddings = nn.Parameter(
-        torch.from_numpy(pruned_embeddings).float()
+        torch.from_numpy(pruned_embeddings).float().to(original_device)
     )
     model.embedding_dim = pruned_embeddings.shape[1]
 
