@@ -29,6 +29,7 @@ data/wiktionary/
 data/parsed_definitions/
 data/embeddings/
 checkpoints/
+colab-results/
 *.pkl
 *.json.gz
 *.xml

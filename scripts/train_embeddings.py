@@ -26,8 +26,15 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import time
+
+# Mixed precision training support
+try:
+    from torch.cuda.amp import autocast, GradScaler
+    AMP_AVAILABLE = True
+except ImportError:
+    AMP_AVAILABLE = False
 
 from src.embeddings.device import DeviceManager
 from src.embeddings.anchors import AnchorDimensions
@@ -82,6 +89,18 @@ def create_relation_distance_map():
         'meronym': 0.5,
         'holonym': 0.5,
         'antonym': 1.0,
+        # WordNet tagged relations (cycled training)
+        'wordnet:hypernym': 0.3,
+        'wordnet:hyponym': 0.3,
+        'wordnet:similar': 0.2,
+        'wordnet:meronym': 0.5,
+        'wordnet:holonym': 0.5,
+        'wordnet:antonym': 1.0,
+        # Wikipedia relations (cycled training)
+        'wikipedia:co-occur': 0.4,        # Co-occurrence relations
+        'wikipedia:syntax_co-occur': 0.4,  # Syntactic co-occurrence
+        # Generic fallback for unknown Wikipedia relations
+        'co-occur': 0.4,
     }
 
 
@@ -454,8 +473,8 @@ class SimpleEmbeddingModel(nn.Module):
         return self.embeddings
 
 
-def train_epoch(model, dataloader, distance_criterion, sparsity_criterion, polarity_criterion, consistency_criterion, optimizer, device, epoch):
-    """Train for one epoch."""
+def train_epoch(model, dataloader, distance_criterion, sparsity_criterion, polarity_criterion, consistency_criterion, optimizer, device, epoch, scaler=None, gradient_accumulation_steps=1):
+    """Train for one epoch with optional mixed precision and gradient accumulation."""
     model.train()
     total_loss = 0.0
     total_distance_loss = 0.0
@@ -463,47 +482,100 @@ def train_epoch(model, dataloader, distance_criterion, sparsity_criterion, polar
     total_polarity_loss = 0.0
     total_consistency_loss = 0.0
 
+    # Zero gradients at start
+    optimizer.zero_grad()
+
     pbar = tqdm(dataloader, desc=f"Epoch {epoch}")
-    for batch in pbar:
+    for batch_idx, batch in enumerate(pbar):
         batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v
                  for k, v in batch.items()}
 
-        embeddings = model()
+        # Mixed precision context
+        use_amp = scaler is not None and torch.cuda.is_available()
 
-        # Compute all losses
-        distance_loss = distance_criterion(embeddings, batch)
-        sparsity_loss = sparsity_criterion(embeddings)
+        if use_amp:
+            with autocast():
+                embeddings = model()
 
-        # Combined loss
-        loss = distance_loss + sparsity_loss
+                # Compute all losses
+                distance_loss = distance_criterion(embeddings, batch)
+                sparsity_loss = sparsity_criterion(embeddings)
 
-        # Add polarity loss if available
-        if polarity_criterion is not None:
-            polarity_loss = polarity_criterion(embeddings)
-            loss = loss + polarity_loss
-            total_polarity_loss += polarity_loss.item()
+                # Combined loss
+                loss = distance_loss + sparsity_loss
+
+                # Add polarity loss if available
+                if polarity_criterion is not None:
+                    polarity_loss = polarity_criterion(embeddings)
+                    loss = loss + polarity_loss
+                else:
+                    polarity_loss = torch.tensor(0.0)
+
+                # Add consistency loss if available
+                if consistency_criterion is not None:
+                    consistency_loss = consistency_criterion(embeddings)
+                    loss = loss + consistency_loss
+                else:
+                    consistency_loss = torch.tensor(0.0)
+
+                # Scale loss for gradient accumulation
+                loss = loss / gradient_accumulation_steps
         else:
-            polarity_loss = torch.tensor(0.0)
+            embeddings = model()
 
-        # Add consistency loss if available
-        if consistency_criterion is not None:
-            consistency_loss = consistency_criterion(embeddings)
-            loss = loss + consistency_loss
-            total_consistency_loss += consistency_loss.item()
+            # Compute all losses
+            distance_loss = distance_criterion(embeddings, batch)
+            sparsity_loss = sparsity_criterion(embeddings)
+
+            # Combined loss
+            loss = distance_loss + sparsity_loss
+
+            # Add polarity loss if available
+            if polarity_criterion is not None:
+                polarity_loss = polarity_criterion(embeddings)
+                loss = loss + polarity_loss
+            else:
+                polarity_loss = torch.tensor(0.0)
+
+            # Add consistency loss if available
+            if consistency_criterion is not None:
+                consistency_loss = consistency_criterion(embeddings)
+                loss = loss + consistency_loss
+            else:
+                consistency_loss = torch.tensor(0.0)
+
+            # Scale loss for gradient accumulation
+            loss = loss / gradient_accumulation_steps
+
+        # Backward pass with or without mixed precision
+        if use_amp:
+            scaler.scale(loss).backward()
         else:
-            consistency_loss = torch.tensor(0.0)
+            loss.backward()
 
-        optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-        optimizer.step()
+        # Optimizer step only at accumulation boundaries
+        if (batch_idx + 1) % gradient_accumulation_steps == 0:
+            if use_amp:
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
+            optimizer.zero_grad()
 
-        total_loss += loss.item()
+        # Track losses (unscaled)
+        total_loss += loss.item() * gradient_accumulation_steps
         total_distance_loss += distance_loss.item()
         total_sparsity_loss += sparsity_loss.item()
+        if polarity_criterion is not None:
+            total_polarity_loss += polarity_loss.item()
+        if consistency_criterion is not None:
+            total_consistency_loss += consistency_loss.item()
 
         postfix = {
-            'loss': f'{loss.item():.4f}',
+            'loss': f'{loss.item() * gradient_accumulation_steps:.4f}',
             'dist': f'{distance_loss.item():.4f}',
             'spar': f'{sparsity_loss.item():.4f}'
         }
@@ -606,6 +678,31 @@ def main():
     parser.add_argument('--min-delta', type=float, default=0.0001,
                        help='Early stopping: minimum improvement to count')
 
+    # Cycled training (WordNet + Wikipedia alternating)
+    parser.add_argument('--cycled-training', action='store_true',
+                       help='Enable cycled training (alternate WordNet/Wikipedia each epoch)')
+    parser.add_argument('--training-data-wordnet', type=str, default=None,
+                       help='Directory with WordNet training data (for cycled training)')
+    parser.add_argument('--training-data-wikipedia', type=str, default=None,
+                       help='Directory with Wikipedia training data (for cycled training)')
+    parser.add_argument('--vocabulary', type=str, default=None,
+                       help='Unified vocabulary file (for cycled training)')
+
+    # A100 optimizations
+    parser.add_argument('--mixed-precision', action='store_true',
+                       help='Enable mixed precision training (float16) for 2x speedup')
+    parser.add_argument('--gradient-accumulation-steps', type=int, default=1,
+                       help='Gradient accumulation steps (simulate larger batches)')
+    parser.add_argument('--num-workers', type=int, default=0,
+                       help='Number of data loading workers (use 16 for A100)')
+    parser.add_argument('--prefetch-factor', type=int, default=2,
+                       help='Number of batches to prefetch per worker')
+    parser.add_argument('--lr-scheduler', type=str, default=None,
+                       choices=[None, 'cosine', 'step', 'exponential'],
+                       help='Learning rate scheduler type')
+    parser.add_argument('--warmup-epochs', type=int, default=0,
+                       help='Number of warmup epochs for LR scheduler')
+
     args = parser.parse_args()
 
     print("=" * 70)
@@ -614,7 +711,6 @@ def main():
     print()
 
     # Configuration
-    TRAINING_DATA_DIR = Path(args.training_data)
     OUTPUT_DIR = Path("checkpoints")
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -626,17 +722,59 @@ def main():
 
     # Load training data
     print("[2/7] Loading training data...")
-    with open(TRAINING_DATA_DIR / "training_edges.pkl", 'rb') as f:
-        edges = pickle.load(f)
-    with open(TRAINING_DATA_DIR / "vocabulary.json", 'r', encoding='utf-8') as f:
-        vocab_data = json.load(f)
+
+    # Check for cycled training mode
+    if args.cycled_training:
+        if not args.training_data_wordnet or not args.training_data_wikipedia:
+            print("ERROR: --cycled-training requires --training-data-wordnet and --training-data-wikipedia")
+            sys.exit(1)
+
+        print("  [CYCLED TRAINING MODE]")
+        print("  Loading WordNet dataset...")
+        wordnet_edges_file = Path(args.training_data_wordnet)
+        with open(wordnet_edges_file, 'rb') as f:
+            wordnet_edges = pickle.load(f)
+        print(f"    WordNet edges: {len(wordnet_edges):,}")
+
+        print("  Loading Wikipedia dataset...")
+        wikipedia_edges_file = Path(args.training_data_wikipedia)
+        with open(wikipedia_edges_file, 'rb') as f:
+            wikipedia_edges = pickle.load(f)
+        print(f"    Wikipedia edges: {len(wikipedia_edges):,}")
+
+        # Load unified vocabulary
+        if args.vocabulary:
+            vocab_file = Path(args.vocabulary)
+        else:
+            vocab_file = Path(args.training_data_wordnet).parent / "vocabulary.json"
+
+        with open(vocab_file, 'r', encoding='utf-8') as f:
+            vocab_data = json.load(f)
+
+        # Store both edge sets for alternating
+        cycled_edges = {
+            'wordnet': wordnet_edges,
+            'wikipedia': wikipedia_edges
+        }
+        edges = wordnet_edges + wikipedia_edges  # Combined for initial dataset creation
+
+    else:
+        # Single dataset mode (original behavior)
+        TRAINING_DATA_DIR = Path(args.training_data)
+        with open(TRAINING_DATA_DIR / "training_edges.pkl", 'rb') as f:
+            edges = pickle.load(f)
+        with open(TRAINING_DATA_DIR / "vocabulary.json", 'r', encoding='utf-8') as f:
+            vocab_data = json.load(f)
+
+        cycled_edges = None
 
     vocab_size = vocab_data['vocab_size']
     word_to_id = vocab_data['word_to_id']
     id_to_word = vocab_data['id_to_word']
 
-    print(f"  Vocabulary size: {vocab_size}")
-    print(f"  Training edges: {len(edges)}")
+    print(f"  Vocabulary size: {vocab_size:,}")
+    if not args.cycled_training:
+        print(f"  Training edges: {len(edges):,}")
     print()
 
     # Create dataset
@@ -658,12 +796,55 @@ def main():
     initial_batch_size = args.batch_size
     initial_dims = args.embedding_dim
 
+    # DataLoader kwargs for A100 optimization
+    dataloader_kwargs = {
+        'num_workers': args.num_workers,
+        'pin_memory': True if torch.cuda.is_available() else False,
+    }
+    if args.num_workers > 0:
+        dataloader_kwargs['prefetch_factor'] = args.prefetch_factor
+
     train_loader = DataLoader(
-        train_dataset, batch_size=current_batch_size, shuffle=True, num_workers=0
+        train_dataset, batch_size=current_batch_size, shuffle=True, **dataloader_kwargs
     )
     val_loader = DataLoader(
-        val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0
+        val_dataset, batch_size=args.batch_size, shuffle=False, **dataloader_kwargs
     )
+
+    # Create separate loaders for cycled training if enabled
+    if args.cycled_training:
+        wordnet_dataset = DistanceConstraintDataset(cycled_edges['wordnet'], vocab_size, relation_distances)
+        wikipedia_dataset = DistanceConstraintDataset(cycled_edges['wikipedia'], vocab_size, relation_distances)
+
+        # Split each dataset
+        wordnet_val_size = int(len(wordnet_dataset) * 0.1)
+        wordnet_train_size = len(wordnet_dataset) - wordnet_val_size
+        wordnet_train, wordnet_val = torch.utils.data.random_split(
+            wordnet_dataset, [wordnet_train_size, wordnet_val_size]
+        )
+
+        wikipedia_val_size = int(len(wikipedia_dataset) * 0.1)
+        wikipedia_train_size = len(wikipedia_dataset) - wikipedia_val_size
+        wikipedia_train, wikipedia_val = torch.utils.data.random_split(
+            wikipedia_dataset, [wikipedia_train_size, wikipedia_val_size]
+        )
+
+        wordnet_train_loader = DataLoader(wordnet_train, batch_size=current_batch_size, shuffle=True, **dataloader_kwargs)
+        wordnet_val_loader = DataLoader(wordnet_val, batch_size=args.batch_size, shuffle=False, **dataloader_kwargs)
+        wikipedia_train_loader = DataLoader(wikipedia_train, batch_size=current_batch_size, shuffle=True, **dataloader_kwargs)
+        wikipedia_val_loader = DataLoader(wikipedia_val, batch_size=args.batch_size, shuffle=False, **dataloader_kwargs)
+
+        cycled_loaders = {
+            'wordnet': (wordnet_train_loader, wordnet_val_loader),
+            'wikipedia': (wikipedia_train_loader, wikipedia_val_loader)
+        }
+
+        print(f"  Cycled training loaders created:")
+        print(f"    WordNet - Train: {len(wordnet_train):,}, Val: {len(wordnet_val):,}")
+        print(f"    Wikipedia - Train: {len(wikipedia_train):,}, Val: {len(wikipedia_val):,}")
+    else:
+        cycled_loaders = None
+
     print()
 
     # Initialize model
@@ -679,6 +860,35 @@ def main():
     # Initialize optimizer and loss
     print("[5/7] Initializing optimizer and loss functions...")
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    # Initialize learning rate scheduler if requested
+    scheduler = None
+    if args.lr_scheduler == 'cosine':
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=args.epochs - args.warmup_epochs,
+            eta_min=args.lr * 0.01
+        )
+        print(f"  LR Scheduler: Cosine annealing (T_max={args.epochs - args.warmup_epochs})")
+    elif args.lr_scheduler == 'step':
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+        print(f"  LR Scheduler: Step (step_size=10, gamma=0.5)")
+    elif args.lr_scheduler == 'exponential':
+        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
+        print(f"  LR Scheduler: Exponential (gamma=0.95)")
+
+    # Mixed precision scaler
+    scaler = None
+    if args.mixed_precision:
+        if not AMP_AVAILABLE:
+            print("  WARNING: Mixed precision requested but not available (requires PyTorch 1.6+)")
+            print("  Falling back to FP32 training")
+        elif not torch.cuda.is_available():
+            print("  WARNING: Mixed precision requires CUDA, falling back to FP32")
+        else:
+            scaler = GradScaler()
+            print(f"  Mixed precision enabled (FP16/FP32)")
+
     distance_criterion = DistanceLoss()
     sparsity_criterion = SparsityLoss(l1_weight=0.01)
 
@@ -730,16 +940,50 @@ def main():
         print(f"  Expansion check interval: every {args.expand_interval} epochs")
         print(f"  Expansion amount: {args.expand_by} dims per expansion")
     print(f"  Early stopping enabled: patience={args.patience}, min_delta={args.min_delta}")
+    if args.cycled_training:
+        print(f"  Cycled training enabled: alternating WordNet/Wikipedia each epoch")
+    if args.mixed_precision and scaler is not None:
+        print(f"  Mixed precision training: FP16/FP32")
+    if args.gradient_accumulation_steps > 1:
+        print(f"  Gradient accumulation: {args.gradient_accumulation_steps} steps")
+    if scheduler is not None:
+        print(f"  Learning rate schedule: {args.lr_scheduler}")
     print()
     best_val_loss = float('inf')
     epochs_without_improvement = 0
     start_time = time.time()
 
     for epoch in range(1, args.epochs + 1):
-        train_losses = train_epoch(model, train_loader, distance_criterion, sparsity_criterion, polarity_criterion, consistency_criterion, optimizer, device, epoch)
-        val_losses = validate(model, val_loader, distance_criterion, sparsity_criterion, polarity_criterion, consistency_criterion, device)
+        # Determine which dataset to use for cycled training
+        if args.cycled_training:
+            if epoch % 2 == 1:
+                # Odd epochs: WordNet
+                current_source = 'wordnet'
+                train_loader_cycle, val_loader_cycle = cycled_loaders['wordnet']
+            else:
+                # Even epochs: Wikipedia
+                current_source = 'wikipedia'
+                train_loader_cycle, val_loader_cycle = cycled_loaders['wikipedia']
+        else:
+            current_source = None
+            train_loader_cycle = train_loader
+            val_loader_cycle = val_loader
 
-        print(f"Epoch {epoch}/{args.epochs}")
+        # Apply warmup to learning rate
+        if scheduler is not None and epoch <= args.warmup_epochs:
+            warmup_factor = epoch / args.warmup_epochs
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = args.lr * warmup_factor
+
+        train_losses = train_epoch(model, train_loader_cycle, distance_criterion, sparsity_criterion, polarity_criterion, consistency_criterion, optimizer, device, epoch, scaler=scaler, gradient_accumulation_steps=args.gradient_accumulation_steps)
+        val_losses = validate(model, val_loader_cycle, distance_criterion, sparsity_criterion, polarity_criterion, consistency_criterion, device)
+
+        # Display epoch info
+        epoch_info = f"Epoch {epoch}/{args.epochs}"
+        if args.cycled_training:
+            epoch_info += f" [{current_source.upper()}]"
+        print(epoch_info)
+
         loss_str = f"  Train - Total: {train_losses['total']:.4f}, Distance: {train_losses['distance']:.4f}, Sparsity: {train_losses['sparsity']:.4f}"
         if 'polarity' in train_losses:
             loss_str += f", Polarity: {train_losses['polarity']:.4f}"
@@ -759,6 +1003,11 @@ def main():
             embeddings_np = model().cpu().numpy()
             sparsity_pct = 100.0 * np.mean(np.abs(embeddings_np) < 0.01)
             print(f"  Sparsity: {sparsity_pct:.1f}% (target: 40-70%)")
+
+        # Display current learning rate if using scheduler
+        if scheduler is not None:
+            current_lr = optimizer.param_groups[0]['lr']
+            print(f"  Learning rate: {current_lr:.6f}")
 
         # Dynamic dimension management
         if args.dynamic_dims:
@@ -813,6 +1062,10 @@ def main():
             print(f"[Early Stopping] Best validation loss: {best_val_loss:.4f}")
             print(f"[Early Stopping] Stopping training at epoch {epoch}")
             break
+
+        # Step learning rate scheduler (after warmup)
+        if scheduler is not None and epoch > args.warmup_epochs:
+            scheduler.step()
 
         print()
 
