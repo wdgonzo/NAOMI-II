@@ -25,13 +25,14 @@ from typing import List, Dict, Tuple
 from tqdm import tqdm
 
 from src.parser.quantum_parser import QuantumParser
+from src.parser.chart_parser import ChartParser
 from src.parser.pos_tagger import tag_sentence
 from src.graph.triple_extractor import extract_triples
 from src.embeddings.sense_mapper import extract_word_contexts_from_parse
 from src.data_pipeline.corpus_loader import load_corpus_batch
 
 
-def parse_sentence_with_context(parser: QuantumParser, sentence: str, sentence_id: int) -> Dict:
+def parse_sentence_with_context(parser, sentence: str, sentence_id: int) -> Dict:
     """
     Parse a sentence and extract contexts.
 
@@ -81,7 +82,7 @@ def parse_sentence_with_context(parser: QuantumParser, sentence: str, sentence_i
     return result
 
 
-def parse_corpus_batch(parser: QuantumParser, sentences: List[str],
+def parse_corpus_batch(parser, sentences: List[str],
                        start_id: int) -> Tuple[List[Dict], Dict]:
     """
     Parse a batch of sentences.
@@ -190,21 +191,23 @@ def merge_stats(stats1: Dict, stats2: Dict) -> Dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Parse corpus in batches with context tracking')
-    parser.add_argument('--corpus', type=str, default='brown',
+    arg_parser = argparse.ArgumentParser(description='Parse corpus in batches with context tracking')
+    arg_parser.add_argument('--corpus', type=str, default='brown',
                        help='Corpus source (brown, gutenberg, or file path)')
-    parser.add_argument('--max-sentences', type=int, default=10000,
+    arg_parser.add_argument('--parser-type', type=str, default='quantum', choices=['quantum', 'chart'],
+                       help='Parser type: quantum (faster) or chart (more robust, evaluates all options)')
+    arg_parser.add_argument('--max-sentences', type=int, default=10000,
                        help='Maximum sentences to parse')
-    parser.add_argument('--batch-size', type=int, default=100,
+    arg_parser.add_argument('--batch-size', type=int, default=100,
                        help='Batch size for parsing')
-    parser.add_argument('--checkpoint-every', type=int, default=1000,
+    arg_parser.add_argument('--checkpoint-every', type=int, default=1000,
                        help='Save checkpoint every N sentences')
-    parser.add_argument('--output-dir', type=str, default='data/parsed_corpus',
+    arg_parser.add_argument('--output-dir', type=str, default='data/parsed_corpus',
                        help='Output directory')
-    parser.add_argument('--resume', action='store_true',
+    arg_parser.add_argument('--resume', action='store_true',
                        help='Resume from checkpoint if exists')
 
-    args = parser.parse_args()
+    args = arg_parser.parse_args()
 
     print("=" * 70)
     print("BATCH CORPUS PARSER WITH CONTEXT TRACKING")
@@ -222,8 +225,15 @@ def main():
 
     # Initialize parser
     print("[1/5] Initializing parser...")
+    print(f"  Parser type: {args.parser_type}")
     grammar_path = Path(__file__).parent.parent / "grammars" / "english.json"
-    quantum_parser = QuantumParser(str(grammar_path))
+
+    if args.parser_type == 'chart':
+        parser = ChartParser(str(grammar_path))
+        print("  Using ChartParser (evaluates all parse options - more robust)")
+    else:
+        parser = QuantumParser(str(grammar_path))
+        print("  Using QuantumParser (smart branching - faster)")
     print()
 
     # Check for resume
@@ -259,7 +269,7 @@ def main():
                                     max_sentences=args.max_sentences):
         # Parse batch
         batch_results, batch_stats = parse_corpus_batch(
-            quantum_parser, batch, sentences_processed
+            parser, batch, sentences_processed
         )
 
         # Accumulate results

@@ -268,7 +268,9 @@ class SelectivePolarityLoss(nn.Module):
     @staticmethod
     def from_config_files(antonym_types_path: str,
                          dimension_assignments_path: str,
-                         word_to_id: Dict[str, int]) -> 'SelectivePolarityLoss':
+                         word_to_id: Dict[str, int],
+                         polarity_weight: float = 1.0,
+                         similarity_weight: float = 0.5) -> 'SelectivePolarityLoss':
         """
         Create SelectivePolarityLoss from config files.
 
@@ -276,6 +278,8 @@ class SelectivePolarityLoss(nn.Module):
             antonym_types_path: Path to antonym_types.json
             dimension_assignments_path: Path to dimension_assignments.json
             word_to_id: Word to ID mapping
+            polarity_weight: Weight for polarity constraints
+            similarity_weight: Weight for similarity constraints
 
         Returns:
             Configured SelectivePolarityLoss instance
@@ -299,7 +303,12 @@ class SelectivePolarityLoss(nn.Module):
                 for word1, word2 in pairs:
                     antonym_dimension_map[(word1, word2)] = dims
 
-        return SelectivePolarityLoss(antonym_dimension_map, word_to_id)
+        return SelectivePolarityLoss(
+            antonym_dimension_map,
+            word_to_id,
+            polarity_weight=polarity_weight,
+            similarity_weight=similarity_weight
+        )
 
 
 class DimensionalConsistencyLoss(nn.Module):
@@ -703,6 +712,16 @@ def main():
     parser.add_argument('--warmup-epochs', type=int, default=0,
                        help='Number of warmup epochs for LR scheduler')
 
+    # Transparent dimension constraints
+    parser.add_argument('--preserve-anchors', action='store_true',
+                       help='Preserve first 51 anchor dimensions (never train them)')
+    parser.add_argument('--polarity-weight', type=float, default=1.0,
+                       help='Weight for antonym polarity constraints')
+    parser.add_argument('--sparsity-weight', type=float, default=0.001,
+                       help='Weight for sparsity penalty (L1 regularization)')
+    parser.add_argument('--sparsity-target', type=float, default=0.55,
+                       help='Target sparsity percentage (0.4-0.7 = 40-70%)')
+
     args = parser.parse_args()
 
     print("=" * 70)
@@ -855,6 +874,22 @@ def main():
 
     model = SimpleEmbeddingModel(vocab_size, args.embedding_dim).to(device)
     print(f"  Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+
+    # Preserve anchor dimensions if requested
+    if args.preserve_anchors:
+        print(f"  Anchor preservation: ENABLED (first {num_anchors} dims frozen)")
+        # Create a hook to zero out gradients for anchor dimensions
+        def preserve_anchors_hook(grad):
+            """Zero out gradients for first {num_anchors} dimensions."""
+            grad_copy = grad.clone()
+            grad_copy[:, :num_anchors] = 0.0
+            return grad_copy
+
+        # Register hook on embeddings
+        model.embeddings.register_hook(preserve_anchors_hook)
+    else:
+        print(f"  Anchor preservation: DISABLED (all dims trainable)")
+
     print()
 
     # Initialize optimizer and loss
@@ -890,7 +925,7 @@ def main():
             print(f"  Mixed precision enabled (FP16/FP32)")
 
     distance_criterion = DistanceLoss()
-    sparsity_criterion = SparsityLoss(l1_weight=0.01)
+    sparsity_criterion = SparsityLoss(l1_weight=args.sparsity_weight)
 
     # Load selective polarity loss from config files (unless --unsupervised)
     config_dir = Path("config")
@@ -901,12 +936,15 @@ def main():
         print(f"  Training with distance + sparsity constraints only")
     else:
         if (config_dir / "antonym_types.json").exists() and (config_dir / "dimension_assignments.json").exists():
+            # Load polarity loss and update weight
             polarity_criterion = SelectivePolarityLoss.from_config_files(
                 str(config_dir / "antonym_types.json"),
                 str(config_dir / "dimension_assignments.json"),
-                word_to_id
+                word_to_id,
+                polarity_weight=args.polarity_weight
             )
             print(f"  Loaded {len(polarity_criterion.pair_ids)} antonym pairs for selective polarity")
+            print(f"  Polarity weight: {args.polarity_weight}")
         else:
             polarity_criterion = None
             print(f"  No polarity config found - skipping polarity loss")
@@ -931,6 +969,7 @@ def main():
     if consistency_criterion:
         loss_components += " + Dimensional Consistency"
     print(f"  Loss components: {loss_components}")
+    print(f"  Sparsity weight: {args.sparsity_weight} (target: {args.sparsity_target*100:.0f}%)")
     print()
 
     # Training loop
