@@ -21,6 +21,8 @@ import argparse
 import pickle
 import json
 import time
+import multiprocessing as mp
+from functools import partial
 from typing import List, Dict, Tuple
 from tqdm import tqdm
 
@@ -32,12 +34,51 @@ from src.embeddings.sense_mapper import extract_word_contexts_from_parse
 from src.data_pipeline.corpus_loader import load_corpus_batch
 
 
+# Global variables for multiprocessing workers
+_worker_parser = None
+_parser_type = None
+_grammar_path = None
+
+
+def _init_worker(parser_type: str, grammar_path: str):
+    """
+    Initialize parser in worker process.
+
+    Args:
+        parser_type: 'quantum' or 'chart'
+        grammar_path: Path to grammar file
+    """
+    global _worker_parser, _parser_type, _grammar_path
+    _parser_type = parser_type
+    _grammar_path = grammar_path
+
+    if parser_type == 'chart':
+        _worker_parser = ChartParser(grammar_path)
+    else:
+        _worker_parser = QuantumParser(grammar_path)
+
+
+def _parse_sentence_worker(sentence_and_id: Tuple[str, int]) -> Dict:
+    """
+    Worker function for parallel parsing.
+    Uses global parser initialized in worker process.
+
+    Args:
+        sentence_and_id: (sentence, sentence_id) tuple
+
+    Returns:
+        Dictionary with parse results and contexts
+    """
+    sentence, sentence_id = sentence_and_id
+    return parse_sentence_with_context(_worker_parser, sentence, sentence_id)
+
+
 def parse_sentence_with_context(parser, sentence: str, sentence_id: int) -> Dict:
     """
     Parse a sentence and extract contexts.
 
     Args:
-        parser: QuantumParser instance
+        parser: QuantumParser or ChartParser instance
         sentence: Sentence text
         sentence_id: Unique sentence identifier
 
@@ -83,19 +124,19 @@ def parse_sentence_with_context(parser, sentence: str, sentence_id: int) -> Dict
 
 
 def parse_corpus_batch(parser, sentences: List[str],
-                       start_id: int) -> Tuple[List[Dict], Dict]:
+                       start_id: int, pool=None) -> Tuple[List[Dict], Dict]:
     """
-    Parse a batch of sentences.
+    Parse a batch of sentences (sequentially or in parallel).
 
     Args:
-        parser: QuantumParser instance
+        parser: QuantumParser/ChartParser instance (for sequential)
         sentences: List of sentence strings
         start_id: Starting sentence ID for this batch
+        pool: Optional multiprocessing.Pool for parallel processing
 
     Returns:
         (parsed_results, batch_stats) tuple
     """
-    results = []
     stats = {
         'total': len(sentences),
         'success': 0,
@@ -105,11 +146,20 @@ def parse_corpus_batch(parser, sentences: List[str],
         'errors': []
     }
 
-    for i, sentence in enumerate(sentences):
-        sentence_id = start_id + i
-        result = parse_sentence_with_context(parser, sentence, sentence_id)
-        results.append(result)
+    if pool is not None:
+        # Parallel processing
+        sentence_and_ids = [(sent, start_id + i) for i, sent in enumerate(sentences)]
+        results = list(pool.imap(_parse_sentence_worker, sentence_and_ids))
+    else:
+        # Sequential processing
+        results = []
+        for i, sentence in enumerate(sentences):
+            sentence_id = start_id + i
+            result = parse_sentence_with_context(parser, sentence, sentence_id)
+            results.append(result)
 
+    # Aggregate stats
+    for result in results:
         if result['success']:
             stats['success'] += 1
             stats['total_triples'] += result['num_triples']
@@ -118,8 +168,8 @@ def parse_corpus_batch(parser, sentences: List[str],
             stats['failed'] += 1
             if result['error']:
                 stats['errors'].append({
-                    'sentence_id': sentence_id,
-                    'sentence': sentence[:100],  # Truncate long sentences
+                    'sentence_id': result['sentence_id'],
+                    'sentence': result['sentence'][:100],  # Truncate long sentences
                     'error': result['error']
                 })
 
@@ -206,6 +256,8 @@ def main():
                        help='Output directory')
     arg_parser.add_argument('--resume', action='store_true',
                        help='Resume from checkpoint if exists')
+    arg_parser.add_argument('--num-workers', type=int, default=1,
+                       help='Number of parallel workers (1=sequential, >1=parallel)')
 
     args = arg_parser.parse_args()
 
@@ -226,14 +278,29 @@ def main():
     # Initialize parser
     print("[1/5] Initializing parser...")
     print(f"  Parser type: {args.parser_type}")
+    print(f"  Num workers: {args.num_workers}")
     grammar_path = Path(__file__).parent.parent / "grammars" / "english.json"
 
-    if args.parser_type == 'chart':
-        parser = ChartParser(str(grammar_path))
-        print("  Using ChartParser (evaluates all parse options - more robust)")
+    # Initialize parser (only for sequential mode)
+    parser = None
+    pool = None
+
+    if args.num_workers > 1:
+        # Parallel mode - create process pool
+        print(f"  Using multiprocessing with {args.num_workers} workers")
+        pool = mp.Pool(
+            processes=args.num_workers,
+            initializer=_init_worker,
+            initargs=(args.parser_type, str(grammar_path))
+        )
     else:
-        parser = QuantumParser(str(grammar_path))
-        print("  Using QuantumParser (smart branching - faster)")
+        # Sequential mode - create single parser
+        if args.parser_type == 'chart':
+            parser = ChartParser(str(grammar_path))
+            print("  Using ChartParser (evaluates all parse options - more robust)")
+        else:
+            parser = QuantumParser(str(grammar_path))
+            print("  Using QuantumParser (smart branching - faster)")
     print()
 
     # Check for resume
@@ -269,7 +336,7 @@ def main():
                                     max_sentences=args.max_sentences):
         # Parse batch
         batch_results, batch_stats = parse_corpus_batch(
-            parser, batch, sentences_processed
+            parser, batch, sentences_processed, pool
         )
 
         # Accumulate results
@@ -295,6 +362,11 @@ def main():
             break
 
     pbar.close()
+
+    # Clean up multiprocessing pool
+    if pool is not None:
+        pool.close()
+        pool.join()
 
     elapsed = time.time() - start_time
     print()
