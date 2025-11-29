@@ -257,7 +257,7 @@ def main():
     arg_parser.add_argument('--resume', action='store_true',
                        help='Resume from checkpoint if exists')
     arg_parser.add_argument('--num-workers', type=int, default=1,
-                       help='Number of parallel workers (1=sequential, >1=parallel)')
+                       help='Number of parallel workers (1=sequential, >1=parallel). Recommend leaving 2 cores free for system.')
 
     args = arg_parser.parse_args()
 

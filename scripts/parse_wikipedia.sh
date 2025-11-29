@@ -1,0 +1,52 @@
+#!/bin/bash
+# Parse Wikipedia corpus with streaming architecture
+# Memory-safe for 12.4M sentences
+
+# Default configuration (adjust as needed)
+CORPUS="notebooks/data/extracted_articles.txt"
+PARSER="chart"
+MAX_SENTENCES=12377687
+BATCH_SIZE=1000
+NUM_WORKERS=4  # Conservative for Windows stability
+CHECKPOINT_EVERY=50000
+OUTPUT_DIR="data/wikipedia_parsed"
+
+echo "=========================================="
+echo "Wikipedia Corpus Streaming Parser"
+echo "=========================================="
+echo ""
+echo "Configuration:"
+echo "  Corpus: $CORPUS"
+echo "  Parser: $PARSER"
+echo "  Max sentences: $MAX_SENTENCES"
+echo "  Workers: $NUM_WORKERS"
+echo "  Output: $OUTPUT_DIR"
+echo ""
+echo "Estimated time: ~48 hours (with 4 workers)"
+echo "Memory usage: ~2-4GB (constant)"
+echo ""
+echo "Press Ctrl+C to stop (progress will be saved)"
+echo ""
+
+python scripts/stream_parse_corpus.py \
+    --corpus "$CORPUS" \
+    --parser-type "$PARSER" \
+    --max-sentences $MAX_SENTENCES \
+    --batch-size $BATCH_SIZE \
+    --num-workers $NUM_WORKERS \
+    --checkpoint-every $CHECKPOINT_EVERY \
+    --output-dir "$OUTPUT_DIR" \
+    --resume
+
+echo ""
+echo "=========================================="
+echo "Parsing complete!"
+echo "=========================================="
+echo ""
+echo "Results:"
+echo "  Batch files: $OUTPUT_DIR/batches/"
+echo "  Progress: $OUTPUT_DIR/progress.json"
+echo "  Statistics: $OUTPUT_DIR/parse_stats.json"
+echo ""
+echo "To consolidate to pickle (for A100 training):"
+echo "  python scripts/stream_parse_corpus.py --consolidate-only --output-dir $OUTPUT_DIR"

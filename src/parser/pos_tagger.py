@@ -637,6 +637,22 @@ def simple_tag(text: str) -> Tag:
     Returns:
         POS tag
     """
+    # Punctuation handling (BEFORE other checks)
+    if text == ',':
+        return Tag.COMMA
+    if text == ';':
+        return Tag.SEMICOLON
+    if text == ':':
+        return Tag.COLON
+    if text == '(':
+        return Tag.LPAREN
+    if text == ')':
+        return Tag.RPAREN
+    if text in ['—', '–']:  # em-dash (U+2014), en-dash (U+2013)
+        return Tag.EM_DASH
+    if text in ['"', "'", '"', '"', ''', ''']:  # All quote variants
+        return Tag.QUOTE
+
     text_lower = text.lower()
 
     # Check dictionary

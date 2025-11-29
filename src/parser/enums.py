@@ -22,12 +22,21 @@ class Tag(Enum):
     PART = auto()   # Particle
     PRON = auto()   # Pronoun
     PROPN = auto()  # Proper noun
-    PUNCT = auto()  # Punctuation
+    PUNCT = auto()  # Punctuation (generic)
     SCONJ = auto()  # Subordinating conjunction
     SYM = auto()    # Symbol
     VERB = auto()   # Verb
     X = auto()      # Other
     LOG = auto()    # Logical operator (custom)
+
+    # Specific punctuation types (for grammar rules)
+    COMMA = auto()      # ,
+    SEMICOLON = auto()  # ;
+    COLON = auto()      # :
+    LPAREN = auto()     # (
+    RPAREN = auto()     # )
+    EM_DASH = auto()    # — (U+2014)
+    QUOTE = auto()      # " ' " " ' '
 
 
 class NodeType(Enum):
@@ -67,6 +76,15 @@ class NodeType(Enum):
     # Other
     INTJ = auto()        # Interjection
 
+    # Punctuation node types (for grammar pattern matching)
+    COMMA = auto()
+    SEMICOLON = auto()
+    COLON = auto()
+    LPAREN = auto()
+    RPAREN = auto()
+    EM_DASH = auto()
+    QUOTE = auto()
+
 
 # Default POS → NodeType mapping
 TAG_TO_NODE_TYPE = {
@@ -88,6 +106,15 @@ TAG_TO_NODE_TYPE = {
     Tag.VERB: NodeType.VERBAL,
     Tag.X: NodeType.NIL,
     Tag.LOG: NodeType.COORD,
+
+    # Specific punctuation (map to corresponding NodeTypes for pattern matching)
+    Tag.COMMA: NodeType.COMMA,
+    Tag.SEMICOLON: NodeType.SEMICOLON,
+    Tag.COLON: NodeType.COLON,
+    Tag.LPAREN: NodeType.LPAREN,
+    Tag.RPAREN: NodeType.RPAREN,
+    Tag.EM_DASH: NodeType.EM_DASH,
+    Tag.QUOTE: NodeType.QUOTE,
 }
 
 
@@ -119,8 +146,10 @@ class ConnectionType(Enum):
     SUBORDINATION_FROM = auto()   # Main clause
     SUBORDINATION_TO = auto()     # Embedded clause
 
-    # Apposition
+    # Apposition and parentheticals
     APPOSITION = auto()           # Noun-noun apposition
+    PARENTHETICAL = auto()        # Interrupting aside (commas, parens, em-dashes)
+    ELABORATION = auto()          # Colon-introduced explanation
 
 
 class SubCat(Enum):
