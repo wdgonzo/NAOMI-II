@@ -50,6 +50,7 @@
 
 | Document | Purpose | Read Time | When to Read |
 |----------|---------|-----------|--------------|
+| **[docs/INCREMENTAL_LEARNING_DESIGN.md](../docs/INCREMENTAL_LEARNING_DESIGN.md)** | **3-graph incremental learning** | **30 min** | **AGI ARCHITECTURE** |
 | [docs/MEMORY_GRAPH_VISION.md](../docs/MEMORY_GRAPH_VISION.md) | Reasoning & knowledge graphs | 25 min | Future vision |
 | [SCALING_PLAN.md](../SCALING_PLAN.md) | Scaling to production | 15 min | Planning |
 | [LEGACY_CONCEPTS.md](../LEGACY_CONCEPTS.md) | Original NAOMI design | 20 min | Historical |

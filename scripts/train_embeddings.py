@@ -721,6 +721,8 @@ def main():
                        help='Weight for sparsity penalty (L1 regularization)')
     parser.add_argument('--sparsity-target', type=float, default=0.55,
                        help='Target sparsity percentage (0.4-0.7 = 40-70%)')
+    parser.add_argument('--resume-from-checkpoint', type=str, default=None,
+                       help='Path to checkpoint file to resume training from')
 
     args = parser.parse_args()
 
@@ -896,6 +898,27 @@ def main():
     print("[5/7] Initializing optimizer and loss functions...")
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+    # Resume from checkpoint if provided
+    start_epoch = 1
+    best_val_loss = float('inf')
+    if args.resume_from_checkpoint:
+        print(f"\n  Loading checkpoint from {args.resume_from_checkpoint}...")
+        checkpoint = torch.load(args.resume_from_checkpoint, map_location=device)
+
+        # Load model state
+        model.load_state_dict(checkpoint['model_state_dict'])
+        print(f"  ✓ Loaded model state")
+
+        # Load optimizer state
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        print(f"  ✓ Loaded optimizer state")
+
+        # Load training progress
+        start_epoch = checkpoint['epoch'] + 1
+        best_val_loss = checkpoint.get('loss', float('inf'))
+        print(f"  ✓ Resuming from epoch {start_epoch} (best loss: {best_val_loss:.4f})")
+        print()
+
     # Initialize learning rate scheduler if requested
     scheduler = None
     if args.lr_scheduler == 'cosine':
@@ -988,11 +1011,11 @@ def main():
     if scheduler is not None:
         print(f"  Learning rate schedule: {args.lr_scheduler}")
     print()
-    best_val_loss = float('inf')
+    # Note: best_val_loss and start_epoch already initialized above (may be loaded from checkpoint)
     epochs_without_improvement = 0
     start_time = time.time()
 
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(start_epoch, args.epochs + 1):
         # Determine which dataset to use for cycled training
         if args.cycled_training:
             if epoch % 2 == 1:

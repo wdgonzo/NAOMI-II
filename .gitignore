@@ -30,10 +30,21 @@ data/parsed_definitions/
 data/embeddings/
 checkpoints/
 colab-results/
+
+# Large binary/compressed files
 *.pkl
 *.json.gz
 *.xml
 *.xml.gz
+*.jsonl
+
+# Large text corpus files
+*.txt
+
+# Keep small metadata JSONs (parse_stats.json, graph_stats.json, vocabulary.json are OK)
+# Only ignore large JSONs in specific data directories
+data/*/parsed_corpus.json
+data/*/training_examples.json
 
 # IDE
 .vscode/

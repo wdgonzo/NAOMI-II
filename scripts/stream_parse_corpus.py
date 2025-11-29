@@ -200,15 +200,30 @@ def serialize_parse_result(result: Dict) -> Dict:
             else:
                 serialized_contexts[word] = str(contexts)
     elif isinstance(word_contexts, list):
-        # It's a list of WordContext objects
-        serialized_contexts = [
-            {
-                'word': ctx.word if hasattr(ctx, 'word') else str(ctx),
-                'pos': str(ctx.pos) if hasattr(ctx, 'pos') else None,
-                'context': ctx.context if hasattr(ctx, 'context') else None
-            } if hasattr(ctx, '__dict__') else str(ctx)
-            for ctx in word_contexts
-        ]
+        # It's a list of (word, WordContext) tuples
+        serialized_contexts = []
+        for item in word_contexts:
+            if isinstance(item, tuple) and len(item) == 2:
+                word, ctx = item
+                serialized_contexts.append({
+                    'word': ctx.word if hasattr(ctx, 'word') else word,
+                    'pos': str(ctx.pos_tag) if hasattr(ctx, 'pos_tag') else None,
+                    'context': ctx.context if hasattr(ctx, 'context') else None,
+                    'syntactic_role': str(ctx.syntactic_role) if hasattr(ctx, 'syntactic_role') and ctx.syntactic_role else None,
+                    'neighbors': ctx.neighbors if hasattr(ctx, 'neighbors') else []
+                })
+            elif hasattr(item, '__dict__'):
+                # It's a WordContext object directly
+                serialized_contexts.append({
+                    'word': item.word if hasattr(item, 'word') else str(item),
+                    'pos': str(item.pos_tag) if hasattr(item, 'pos_tag') else None,
+                    'context': item.context if hasattr(item, 'context') else None,
+                    'syntactic_role': str(item.syntactic_role) if hasattr(item, 'syntactic_role') and item.syntactic_role else None,
+                    'neighbors': item.neighbors if hasattr(item, 'neighbors') else []
+                })
+            else:
+                # Fallback - skip malformed items
+                continue
     else:
         serialized_contexts = []
 
@@ -574,7 +589,7 @@ def main():
                     'timestamp': time.time()
                 }
                 save_progress(progress_data, progress_file)
-                pbar.write(f"  ✓ Checkpoint saved at {sentences_processed:,} sentences")
+                pbar.write(f"  [OK] Checkpoint saved at {sentences_processed:,} sentences")
 
             # Stop if we've reached max
             if sentences_processed >= args.max_sentences:

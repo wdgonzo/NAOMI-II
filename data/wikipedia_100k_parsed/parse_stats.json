@@ -1,0 +1,13 @@
+{
+  "total": 100000,
+  "success": 100000,
+  "failed": 0,
+  "success_rate": 100.0,
+  "avg_score": 0.8189386736054834,
+  "total_triples": 1555834,
+  "avg_triples_per_sentence": 15.55834,
+  "sentences_per_second": 48.89221006724872,
+  "total_time_seconds": 2045.3156006336212,
+  "total_time_hours": 0.5681432223982281,
+  "sample_errors": []
+}

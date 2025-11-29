@@ -19,10 +19,13 @@
         "poss1", "poss2",
         "neg1", "neg2",
         "rel1", "rel2",
+        "apposition1", "list_coordination", "nonrestrictive_relative",
         "aux1", "aux2",
         "verb1", "verb2",
         "predicate1", "predicate2",
-        "clause1", "clause2"
+        "parenthetical1", "quotation1",
+        "clause1", "clause2",
+        "semicolon_coord", "colon_elaboration"
     ],
 
     "rulesets": {
@@ -2399,6 +2402,214 @@
                     ],
                     "consume": ["before", "after"],
                     "note": "Example: dog runs and cat sleeps"
+                }
+            ]
+        },
+
+        "apposition1": {
+            "description": "Noun-noun apposition with comma separation",
+            "result": "NOMINAL",
+            "rules": [
+                {
+                    "result": "NOMINAL",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {"type": "NOMINAL"},
+                        "before": [],
+                        "after": [
+                            {"type": "COMMA", "quantifier": "one"},
+                            {"type": "NOMINAL", "quantifier": "one"},
+                            {"type": "COMMA", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "APPOSITION", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: Einstein, the physicist, proposed"
+                }
+            ]
+        },
+
+        "list_coordination": {
+            "description": "Comma-separated list coordination",
+            "result": "NOMINAL",
+            "rules": [
+                {
+                    "result": "NOMINAL",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {"type": "NOMINAL"},
+                        "before": [],
+                        "after": [
+                            {"type": "COMMA", "quantifier": "one"},
+                            {"type": "NOMINAL", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "COORDINATION", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: apples, oranges, bananas"
+                }
+            ]
+        },
+
+        "nonrestrictive_relative": {
+            "description": "Non-restrictive relative clause with commas",
+            "result": "NOMINAL",
+            "rules": [
+                {
+                    "result": "NOMINAL",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {"type": "NOMINAL"},
+                        "before": [],
+                        "after": [
+                            {"type": "COMMA", "quantifier": "one"},
+                            {"type": "CLAUSE", "quantifier": "one"},
+                            {"type": "COMMA", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "SUBORDINATION", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: The dog, which was brown, ran"
+                }
+            ]
+        },
+
+        "parenthetical1": {
+            "description": "Parenthetical expressions (all types)",
+            "result": "CLAUSE",
+            "rules": [
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {"type": "CLAUSE"},
+                        "before": [],
+                        "after": [
+                            {"type": "LPAREN", "quantifier": "one"},
+                            {"type": "CLAUSE", "quantifier": "one"},
+                            {"type": "RPAREN", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "PARENTHETICAL", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: He arrived (after lunch) yesterday"
+                },
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {"type": "CLAUSE"},
+                        "before": [],
+                        "after": [
+                            {"type": "COMMA", "quantifier": "one"},
+                            {"type": "CLAUSE", "quantifier": "one"},
+                            {"type": "COMMA", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "PARENTHETICAL", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: He arrived, after lunch, yesterday"
+                },
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {"type": "CLAUSE"},
+                        "before": [],
+                        "after": [
+                            {"type": "EM_DASH", "quantifier": "one"},
+                            {"type": "CLAUSE", "quantifier": "one"},
+                            {"type": "EM_DASH", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "PARENTHETICAL", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: He arrived—after lunch—yesterday"
+                }
+            ]
+        },
+
+        "quotation1": {
+            "description": "Direct speech as verbal object",
+            "result": "PREDICATE",
+            "rules": [
+                {
+                    "result": "PREDICATE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {"type": "VERBAL"},
+                        "before": [],
+                        "after": [
+                            {"type": "QUOTE", "quantifier": "one"},
+                            {"type": "CLAUSE", "quantifier": "one"},
+                            {"type": "QUOTE", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "OBJECT", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: He said 'I am happy'"
+                }
+            ]
+        },
+
+        "semicolon_coord": {
+            "description": "Semicolon coordination of clauses",
+            "result": "CLAUSE",
+            "rules": [
+                {
+                    "result": "CLAUSE",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {"type": "CLAUSE"},
+                        "before": [],
+                        "after": [
+                            {"type": "SEMICOLON", "quantifier": "one"},
+                            {"type": "CLAUSE", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "COORDINATION", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: The dog ran; the cat hid"
+                }
+            ]
+        },
+
+        "colon_elaboration": {
+            "description": "Colon introduces elaboration",
+            "result": "CLAUSE",
+            "rules": [
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {"type": "CLAUSE"},
+                        "before": [],
+                        "after": [
+                            {"type": "COLON", "quantifier": "one"},
+                            {"type": "CLAUSE", "quantifier": "one"}
+                        ]
+                    },
+                    "connections": [
+                        {"type": "ELABORATION", "from": "after[1]", "to": "anchor"}
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: There is one truth: love conquers all"
                 }
             ]
         }

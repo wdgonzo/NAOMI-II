@@ -1,0 +1,94 @@
+{
+  "total": 100,
+  "success": 0,
+  "failed": 100,
+  "success_rate": 0.0,
+  "avg_score": 0.0,
+  "total_triples": 0,
+  "avg_triples_per_sentence": 0.0,
+  "sentences_per_second": 173.21291627038585,
+  "total_time_seconds": 0.5773241519927979,
+  "total_time_hours": 0.0001603678199979994,
+  "sample_errors": [
+    {
+      "sentence": "The Fulton County Grand Jury said Friday an investigation of Atlanta's recent primary election produced `` no evidence '' that any irregularities took place .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "The jury further said in term-end presentments that the City Executive Committee , which had over-all charge of the election , `` deserves the praise and thanks of the City of Atlanta '' for the manner in which the election was conducted .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "The September-October term jury had been charged by Fulton Superior Court Judge Durwood Pye to investigate reports of possible `` irregularities '' in the hard-fought primary which was won by Mayor-nominate Ivan Allen Jr. .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "`` Only a relative handful of such reports was received '' , the jury said , `` considering the widespread interest in the election , the number of voters and the size of this city '' .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "The jury said it did find that many of Georgia's registration and election laws `` are outmoded or inadequate and often ambiguous '' .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "It recommended that Fulton legislators act `` to have these laws studied and revised to the end of modernizing and improving them '' .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "The grand jury commented on a number of other topics , among them the Atlanta and Fulton County purchasing departments which it said `` are well operated and follow generally accepted practices which inure to the best interest of both governments '' .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "Merger proposed",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "However , the jury said it believes `` these two offices should be combined to achieve greater efficiency and reduce the cost of administration '' .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "The City Purchasing Department , the jury said , `` is lacking in experienced clerical personnel as a result of city personnel policies '' .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "The largest hurdle the Republicans would have to face is a state law which says that before making a first race , one of two alternative courses must be taken : 1",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "Five per cent of the voters in each county must sign petitions requesting that the Republicans be allowed to place names of candidates on the general election ballot , or 2",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "The Republicans must hold a primary under the county unit system -- a system which the party opposes in its platform .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "Sam Caldwell , State Highway Department public relations director , resigned Tuesday to work for Lt. Gov. Garland Byrd's campaign .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "Caldwell's resignation had been expected for some time .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "He will be succeeded by Rob Ledford of Gainesville , who has been an assistant more than three years .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "When the gubernatorial campaign starts , Caldwell is expected to become a campaign coordinator for Byrd .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "The Georgia Legislature will wind up its 1961 session Monday and head for home -- where some of the highway bond money it approved will follow shortly .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "Before adjournment Monday afternoon , the Senate is expected to approve a study of the number of legislators allotted to rural and urban areas to determine what adjustments should be made .",
+      "error": "'str' object has no attribute 'text'"
+    },
+    {
+      "sentence": "Gov. Vandiver is expected to make the traditional visit to both chambers as they work toward adjournment .",
+      "error": "'str' object has no attribute 'text'"
+    }
+  ]
+}

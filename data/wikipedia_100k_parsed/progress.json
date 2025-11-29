@@ -1,0 +1,13 @@
+{
+  "sentences_processed": 100000,
+  "last_batch_id": 99000,
+  "cumulative_stats": {
+    "total": 100000,
+    "success": 100000,
+    "failed": 0,
+    "total_triples": 1555834,
+    "total_score": 81893.86736054835,
+    "errors": []
+  },
+  "timestamp": 1764449628.2930253
+}

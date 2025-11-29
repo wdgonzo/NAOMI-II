@@ -23,6 +23,7 @@ from collections import defaultdict, Counter
 
 from src.embeddings.sense_mapper import SenseMapper
 from src.graph.triple_extractor import extract_triples
+from src.parser.enums import Tag
 
 
 def build_sense_tagged_vocabulary(parsed_corpus: List[Dict],
@@ -48,11 +49,38 @@ def build_sense_tagged_vocabulary(parsed_corpus: List[Dict],
 
         word_contexts = result['word_contexts']
 
-        for word, context in word_contexts:
-            # Get sense for this word occurrence
-            sense_idx, _ = mapper.match_context_to_sense(word, context)
-            sense_tag = mapper.create_sense_tag(word, sense_idx, context.pos_tag)
-            sense_tags.add(sense_tag)
+        # word_contexts is a list of serialized WordContext dicts
+        for ctx_dict in word_contexts:
+            if isinstance(ctx_dict, dict):
+                word = ctx_dict.get('word')
+                pos_str = ctx_dict.get('pos')  # e.g., "Tag.DET"
+                neighbors = ctx_dict.get('neighbors', [])
+
+                if word and pos_str:
+                    # Parse pos_tag from string (e.g., "Tag.DET" -> Tag.DET)
+                    try:
+                        # Extract the tag name (e.g., "DET" from "Tag.DET")
+                        tag_name = pos_str.split('.')[-1] if '.' in pos_str else pos_str
+                        pos_tag = Tag[tag_name] if hasattr(Tag, tag_name) else None
+                    except (KeyError, AttributeError):
+                        pos_tag = None
+
+                    if pos_tag:
+                        # Reconstruct WordContext object
+                        from src.embeddings.sense_mapper import WordContext
+                        context = WordContext(
+                            sentence_id=result['sentence_id'],
+                            word=word,
+                            pos_tag=pos_tag,
+                            syntactic_role=None,  # Not needed for WSD
+                            neighbors=neighbors,
+                            parse_tree=None  # Don't need full hypothesis
+                        )
+
+                        # Get sense for this word occurrence
+                        sense_idx, _ = mapper.match_context_to_sense(word, context)
+                        sense_tag = mapper.create_sense_tag(word, sense_idx, pos_str)
+                        sense_tags.add(sense_tag)
 
     # Create vocabulary (sorted for consistency)
     sorted_tags = sorted(sense_tags)
@@ -87,29 +115,56 @@ def extract_sense_tagged_triples(parsed_corpus: List[Dict],
 
         # Build mapping: word_text → sense_tag for this sentence
         word_to_sense = {}
-        for word, context in result['word_contexts']:
-            sense_idx, _ = mapper.match_context_to_sense(word, context)
-            sense_tag = mapper.create_sense_tag(word, sense_idx, context.pos_tag)
-            # Use word text as key (first occurrence wins)
-            if word.lower() not in word_to_sense:
-                word_to_sense[word.lower()] = sense_tag
+        for ctx_dict in result['word_contexts']:
+            if isinstance(ctx_dict, dict):
+                word = ctx_dict.get('word')
+                pos_str = ctx_dict.get('pos')  # e.g., "Tag.DET"
+                neighbors = ctx_dict.get('neighbors', [])
+
+                if word and pos_str:
+                    # Parse pos_tag from string
+                    try:
+                        tag_name = pos_str.split('.')[-1] if '.' in pos_str else pos_str
+                        pos_tag = Tag[tag_name] if hasattr(Tag, tag_name) else None
+                    except (KeyError, AttributeError):
+                        pos_tag = None
+
+                    if pos_tag:
+                        # Reconstruct WordContext object
+                        from src.embeddings.sense_mapper import WordContext
+                        context = WordContext(
+                            sentence_id=result['sentence_id'],
+                            word=word,
+                            pos_tag=pos_tag,
+                            syntactic_role=None,
+                            neighbors=neighbors,
+                            parse_tree=None
+                        )
+
+                        sense_idx, _ = mapper.match_context_to_sense(word, context)
+                        sense_tag = mapper.create_sense_tag(word, sense_idx, pos_str)
+                        # Use word text as key (first occurrence wins)
+                        if word.lower() not in word_to_sense:
+                            word_to_sense[word.lower()] = sense_tag
 
         # Get raw triples from parse
         raw_triples = result['triples']
 
         # Convert to sense-tagged triples
         for triple in raw_triples:
-            # SemanticTriple is a dataclass, access fields
-            subj = triple.subject
-            rel = triple.relation.value  # Get string value from RelationType enum
-            obj = triple.object
+            # Triple is serialized as dict
+            if isinstance(triple, dict):
+                subj = triple.get('subject', '')
+                rel = triple.get('relation', '')
+                obj = triple.get('object', '')
 
-            # Map to sense tags
-            subj_sense = word_to_sense.get(subj.lower(), subj)
-            obj_sense = word_to_sense.get(obj.lower(), obj)
+                if subj and rel and obj:
+                    # Map to sense tags
+                    subj_sense = word_to_sense.get(subj.lower(), subj)
+                    obj_sense = word_to_sense.get(obj.lower(), obj)
 
-            # Append as tuple with relation string
-            all_triples.append((subj_sense, rel, obj_sense))
+                    # Append as tuple with relation string
+                    all_triples.append((subj_sense, rel, obj_sense))
 
     print(f"    Extracted {len(all_triples)} sense-tagged triples")
 
