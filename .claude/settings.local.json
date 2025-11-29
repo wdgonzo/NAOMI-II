@@ -9,7 +9,9 @@
       "Bash(pip search:*)",
       "Bash(temp.py)",
       "Bash(dir:*)",
-      "Bash(timeout 10 sleep:*)"
+      "Bash(timeout 10 sleep:*)",
+      "Bash(nul)",
+      "Bash(timeout 5 sleep:*)"
     ],
     "deny": [],
     "ask": []
