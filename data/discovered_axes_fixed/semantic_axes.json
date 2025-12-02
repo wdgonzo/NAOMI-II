@@ -1,0 +1,2215 @@
+{
+  "axes": [
+    {
+      "axis_id": 0,
+      "name": "near",
+      "cluster_id": 2198,
+      "size": 4,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "early",
+          "late",
+          "middle"
+        ]
+      ],
+      "pole_names": [
+        "area"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "early",
+          "word2": "late",
+          "synset1": "early.a.01",
+          "synset2": "late.a.01"
+        },
+        {
+          "word1": "late",
+          "word2": "middle",
+          "synset1": "late.a.01",
+          "synset2": "middle.a.04"
+        },
+        {
+          "word1": "early",
+          "word2": "middle",
+          "synset1": "early.a.01",
+          "synset2": "middle.a.04"
+        },
+        {
+          "word1": "early",
+          "word2": "late",
+          "synset1": "early.r.02",
+          "synset2": "late.r.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 1,
+      "name": "sex",
+      "cluster_id": 2410,
+      "size": 4,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "androgynous",
+          "female",
+          "male"
+        ]
+      ],
+      "pole_names": [
+        "fertilize"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "female",
+          "word2": "male",
+          "synset1": "female.a.01",
+          "synset2": "male.a.01"
+        },
+        {
+          "word1": "androgynous",
+          "word2": "male",
+          "synset1": "androgynous.a.02",
+          "synset2": "male.a.01"
+        },
+        {
+          "word1": "female",
+          "word2": "male",
+          "synset1": "female.n.01",
+          "synset2": "male.n.01"
+        },
+        {
+          "word1": "androgynous",
+          "word2": "female",
+          "synset1": "androgynous.a.02",
+          "synset2": "female.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 2,
+      "name": "immediately",
+      "cluster_id": 2761,
+      "size": 4,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "adscript",
+          "subscript",
+          "superscript"
+        ]
+      ],
+      "pole_names": [
+        "one"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "adscript",
+          "word2": "superscript",
+          "synset1": "adscript.a.01",
+          "synset2": "superscript.a.01"
+        },
+        {
+          "word1": "adscript",
+          "word2": "subscript",
+          "synset1": "adscript.a.01",
+          "synset2": "subscript.a.01"
+        },
+        {
+          "word1": "subscript",
+          "word2": "superscript",
+          "synset1": "subscript.a.01",
+          "synset2": "superscript.a.01"
+        },
+        {
+          "word1": "subscript",
+          "word2": "superscript",
+          "synset1": "subscript.n.01",
+          "synset2": "superscript.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 3,
+      "name": "sexes",
+      "cluster_id": 24,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "bisexual",
+          "heterosexual",
+          "homosexual"
+        ]
+      ],
+      "pole_names": [
+        "heterosexual"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "bisexual",
+          "word2": "heterosexual",
+          "synset1": "bisexual.a.01",
+          "synset2": "heterosexual.a.01"
+        },
+        {
+          "word1": "bisexual",
+          "word2": "homosexual",
+          "synset1": "bisexual.a.01",
+          "synset2": "homosexual.a.01"
+        },
+        {
+          "word1": "heterosexual",
+          "word2": "homosexual",
+          "synset1": "heterosexual.a.01",
+          "synset2": "homosexual.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 4,
+      "name": "past",
+      "cluster_id": 307,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "futurity",
+          "pastness",
+          "presentness"
+        ]
+      ],
+      "pole_names": [
+        "time"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "pastness",
+          "word2": "presentness",
+          "synset1": "pastness.n.01",
+          "synset2": "presentness.n.01"
+        },
+        {
+          "word1": "futurity",
+          "word2": "presentness",
+          "synset1": "futurity.n.02",
+          "synset2": "presentness.n.01"
+        },
+        {
+          "word1": "futurity",
+          "word2": "pastness",
+          "synset1": "futurity.n.02",
+          "synset2": "pastness.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 5,
+      "name": "nations",
+      "cluster_id": 483,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "internationalism",
+          "multiculturalism",
+          "nationalism"
+        ]
+      ],
+      "pole_names": [
+        "several"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "internationalism",
+          "word2": "nationalism",
+          "synset1": "internationalism.n.01",
+          "synset2": "nationalism.n.02"
+        },
+        {
+          "word1": "internationalism",
+          "word2": "nationalism",
+          "synset1": "internationalism.n.01",
+          "synset2": "nationalism.n.04"
+        },
+        {
+          "word1": "multiculturalism",
+          "word2": "nationalism",
+          "synset1": "multiculturalism.n.01",
+          "synset2": "nationalism.n.02"
+        }
+      ]
+    },
+    {
+      "axis_id": 6,
+      "name": "first",
+      "cluster_id": 571,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "beginning",
+          "end",
+          "middle"
+        ]
+      ],
+      "pole_names": [
+        "area"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "beginning",
+          "word2": "end",
+          "synset1": "beginning.n.03",
+          "synset2": "end.n.05"
+        },
+        {
+          "word1": "beginning",
+          "word2": "middle",
+          "synset1": "beginning.n.03",
+          "synset2": "middle.n.02"
+        },
+        {
+          "word1": "end",
+          "word2": "middle",
+          "synset1": "end.n.05",
+          "synset2": "middle.n.02"
+        }
+      ]
+    },
+    {
+      "axis_id": 7,
+      "name": "point",
+      "cluster_id": 572,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "beginning",
+          "end",
+          "middle"
+        ]
+      ],
+      "pole_names": [
+        "area"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "end",
+          "word2": "middle",
+          "synset1": "end.n.02",
+          "synset2": "middle.n.04"
+        },
+        {
+          "word1": "beginning",
+          "word2": "end",
+          "synset1": "beginning.n.02",
+          "synset2": "end.n.02"
+        },
+        {
+          "word1": "beginning",
+          "word2": "middle",
+          "synset1": "beginning.n.02",
+          "synset2": "middle.n.04"
+        }
+      ]
+    },
+    {
+      "axis_id": 8,
+      "name": "contraction",
+      "cluster_id": 610,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "deflation",
+          "disinflation",
+          "inflation"
+        ]
+      ],
+      "pole_names": [
+        "geology"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "deflation",
+          "word2": "disinflation",
+          "synset1": "deflation.n.02",
+          "synset2": "disinflation.n.01"
+        },
+        {
+          "word1": "deflation",
+          "word2": "inflation",
+          "synset1": "deflation.n.02",
+          "synset2": "inflation.n.01"
+        },
+        {
+          "word1": "disinflation",
+          "word2": "inflation",
+          "synset1": "disinflation.n.01",
+          "synset2": "inflation.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 9,
+      "name": "turn",
+      "cluster_id": 648,
+      "size": 3,
+      "coherence_score": 0.5555555555555555,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "curdle",
+          "homogenise",
+          "homogenize"
+        ]
+      ],
+      "pole_names": [
+        "break"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "curdle",
+          "word2": "homogenise",
+          "synset1": "curdle.v.01",
+          "synset2": "homogenize.v.03"
+        },
+        {
+          "word1": "curdle",
+          "word2": "homogenize",
+          "synset1": "curdle.v.01",
+          "synset2": "homogenize.v.02"
+        },
+        {
+          "word1": "curdle",
+          "word2": "homogenise",
+          "synset1": "curdle.v.01",
+          "synset2": "homogenize.v.02"
+        }
+      ]
+    },
+    {
+      "axis_id": 10,
+      "name": "slanting",
+      "cluster_id": 712,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "oblique",
+          "parallel",
+          "perpendicular"
+        ]
+      ],
+      "pole_names": [
+        "straight"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "oblique",
+          "word2": "parallel",
+          "synset1": "oblique.a.01",
+          "synset2": "parallel.a.01"
+        },
+        {
+          "word1": "parallel",
+          "word2": "perpendicular",
+          "synset1": "parallel.a.01",
+          "synset2": "perpendicular.a.01"
+        },
+        {
+          "word1": "oblique",
+          "word2": "perpendicular",
+          "synset1": "oblique.a.01",
+          "synset2": "perpendicular.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 11,
+      "name": "hatch",
+      "cluster_id": 713,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "oviparous",
+          "ovoviviparous",
+          "viviparous"
+        ]
+      ],
+      "pole_names": [
+        "hatch"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "ovoviviparous",
+          "word2": "viviparous",
+          "synset1": "ovoviviparous.a.01",
+          "synset2": "viviparous.a.01"
+        },
+        {
+          "word1": "oviparous",
+          "word2": "viviparous",
+          "synset1": "oviparous.a.01",
+          "synset2": "viviparous.a.01"
+        },
+        {
+          "word1": "oviparous",
+          "word2": "ovoviviparous",
+          "synset1": "oviparous.a.01",
+          "synset2": "ovoviviparous.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 12,
+      "name": "operating",
+      "cluster_id": 716,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "amphibious",
+          "aquatic",
+          "terrestrial"
+        ]
+      ],
+      "pole_names": [
+        "inhabiting"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "amphibious",
+          "word2": "aquatic",
+          "synset1": "amphibious.a.02",
+          "synset2": "aquatic.a.02"
+        },
+        {
+          "word1": "amphibious",
+          "word2": "terrestrial",
+          "synset1": "amphibious.a.02",
+          "synset2": "terrestrial.a.03"
+        },
+        {
+          "word1": "aquatic",
+          "word2": "terrestrial",
+          "synset1": "aquatic.a.02",
+          "synset2": "terrestrial.a.03"
+        }
+      ]
+    },
+    {
+      "axis_id": 13,
+      "name": "whole",
+      "cluster_id": 778,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "all",
+          "no",
+          "some"
+        ]
+      ],
+      "pole_names": [
+        "plural"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "all",
+          "word2": "no",
+          "synset1": "all.a.01",
+          "synset2": "no.a.01"
+        },
+        {
+          "word1": "all",
+          "word2": "some",
+          "synset1": "all.a.01",
+          "synset2": "some.a.01"
+        },
+        {
+          "word1": "no",
+          "word2": "some",
+          "synset1": "no.a.01",
+          "synset2": "some.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 14,
+      "name": "associated",
+      "cluster_id": 787,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "bivalent",
+          "multivalent",
+          "univalent"
+        ]
+      ],
+      "pole_names": [
+        "valence"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "bivalent",
+          "word2": "univalent",
+          "synset1": "bivalent.a.02",
+          "synset2": "univalent.a.01"
+        },
+        {
+          "word1": "bivalent",
+          "word2": "multivalent",
+          "synset1": "bivalent.a.02",
+          "synset2": "multivalent.a.01"
+        },
+        {
+          "word1": "multivalent",
+          "word2": "univalent",
+          "synset1": "multivalent.a.01",
+          "synset2": "univalent.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 15,
+      "name": "short",
+      "cluster_id": 803,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "maxi",
+          "midi",
+          "mini"
+        ]
+      ],
+      "pole_names": [
+        "southern"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "midi",
+          "word2": "mini",
+          "synset1": "midi.a.01",
+          "synset2": "mini.a.01"
+        },
+        {
+          "word1": "maxi",
+          "word2": "mini",
+          "synset1": "maxi.a.01",
+          "synset2": "mini.a.01"
+        },
+        {
+          "word1": "maxi",
+          "word2": "midi",
+          "synset1": "maxi.a.01",
+          "synset2": "midi.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 16,
+      "name": "completing",
+      "cluster_id": 955,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "annual",
+          "biennial",
+          "perennial"
+        ]
+      ],
+      "pole_names": [
+        "completes"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "annual",
+          "word2": "perennial",
+          "synset1": "annual.a.01",
+          "synset2": "perennial.a.01"
+        },
+        {
+          "word1": "annual",
+          "word2": "biennial",
+          "synset1": "annual.a.01",
+          "synset2": "biennial.a.01"
+        },
+        {
+          "word1": "biennial",
+          "word2": "perennial",
+          "synset1": "biennial.a.01",
+          "synset2": "perennial.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 17,
+      "name": "three",
+      "cluster_id": 1218,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "cubic",
+          "linear",
+          "planar"
+        ]
+      ],
+      "pole_names": [
+        "three"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "cubic",
+          "word2": "planar",
+          "synset1": "cubic.a.01",
+          "synset2": "planar.a.01"
+        },
+        {
+          "word1": "linear",
+          "word2": "planar",
+          "synset1": "linear.a.02",
+          "synset2": "planar.a.01"
+        },
+        {
+          "word1": "cubic",
+          "word2": "linear",
+          "synset1": "cubic.a.01",
+          "synset2": "linear.a.02"
+        }
+      ]
+    },
+    {
+      "axis_id": 18,
+      "name": "outward",
+      "cluster_id": 1248,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "ambiversive",
+          "extroversive",
+          "introversive"
+        ]
+      ],
+      "pole_names": [
+        "inward"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "extroversive",
+          "word2": "introversive",
+          "synset1": "extroversive.a.01",
+          "synset2": "introversive.a.01"
+        },
+        {
+          "word1": "ambiversive",
+          "word2": "introversive",
+          "synset1": "ambiversive.a.01",
+          "synset2": "introversive.a.01"
+        },
+        {
+          "word1": "ambiversive",
+          "word2": "extroversive",
+          "synset1": "ambiversive.a.01",
+          "synset2": "extroversive.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 19,
+      "name": "moderate",
+      "cluster_id": 1257,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "hydric",
+          "mesic",
+          "xeric"
+        ]
+      ],
+      "pole_names": [
+        "characterized"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "mesic",
+          "word2": "xeric",
+          "synset1": "mesic.a.02",
+          "synset2": "xeric.a.01"
+        },
+        {
+          "word1": "hydric",
+          "word2": "mesic",
+          "synset1": "hydric.a.01",
+          "synset2": "mesic.a.02"
+        },
+        {
+          "word1": "hydric",
+          "word2": "xeric",
+          "synset1": "hydric.a.01",
+          "synset2": "xeric.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 20,
+      "name": "used",
+      "cluster_id": 1259,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "carnivorous",
+          "herbivorous",
+          "insectivorous",
+          "omnivorous"
+        ]
+      ],
+      "pole_names": [
+        "relating"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "carnivorous",
+          "word2": "herbivorous",
+          "synset1": "carnivorous.a.02",
+          "synset2": "herbivorous.a.01"
+        },
+        {
+          "word1": "carnivorous",
+          "word2": "insectivorous",
+          "synset1": "carnivorous.a.02",
+          "synset2": "insectivorous.a.01"
+        },
+        {
+          "word1": "carnivorous",
+          "word2": "omnivorous",
+          "synset1": "carnivorous.a.02",
+          "synset2": "omnivorous.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 21,
+      "name": "insects",
+      "cluster_id": 1260,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "herbivorous",
+          "insectivorous",
+          "omnivorous"
+        ]
+      ],
+      "pole_names": [
+        "insects"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "insectivorous",
+          "word2": "omnivorous",
+          "synset1": "insectivorous.a.01",
+          "synset2": "omnivorous.a.01"
+        },
+        {
+          "word1": "herbivorous",
+          "word2": "insectivorous",
+          "synset1": "herbivorous.a.01",
+          "synset2": "insectivorous.a.01"
+        },
+        {
+          "word1": "herbivorous",
+          "word2": "omnivorous",
+          "synset1": "herbivorous.a.01",
+          "synset2": "omnivorous.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 22,
+      "name": "completely",
+      "cluster_id": 1291,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "apophatism",
+          "cataphatism",
+          "doctrine_of_analogy"
+        ]
+      ],
+      "pole_names": [
+        "given"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "apophatism",
+          "word2": "cataphatism",
+          "synset1": "apophatism.n.01",
+          "synset2": "cataphatism.n.01"
+        },
+        {
+          "word1": "cataphatism",
+          "word2": "doctrine_of_analogy",
+          "synset1": "cataphatism.n.01",
+          "synset2": "doctrine_of_analogy.n.01"
+        },
+        {
+          "word1": "apophatism",
+          "word2": "doctrine_of_analogy",
+          "synset1": "apophatism.n.01",
+          "synset2": "doctrine_of_analogy.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 23,
+      "name": "yet",
+      "cluster_id": 1373,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "future",
+          "past",
+          "present"
+        ]
+      ],
+      "pole_names": [
+        "period"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "future",
+          "word2": "present",
+          "synset1": "future.a.01",
+          "synset2": "present.a.01"
+        },
+        {
+          "word1": "past",
+          "word2": "present",
+          "synset1": "past.a.01",
+          "synset2": "present.a.01"
+        },
+        {
+          "word1": "future",
+          "word2": "past",
+          "synset1": "future.a.01",
+          "synset2": "past.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 24,
+      "name": "neither",
+      "cluster_id": 1463,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "center",
+          "left",
+          "right"
+        ]
+      ],
+      "pole_names": [
+        "area"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "center",
+          "word2": "right",
+          "synset1": "center.a.02",
+          "synset2": "right.a.07"
+        },
+        {
+          "word1": "left",
+          "word2": "right",
+          "synset1": "left.a.04",
+          "synset2": "right.a.07"
+        },
+        {
+          "word1": "center",
+          "word2": "left",
+          "synset1": "center.a.02",
+          "synset2": "left.a.04"
+        }
+      ]
+    },
+    {
+      "axis_id": 25,
+      "name": "full",
+      "cluster_id": 1601,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "acatalectic",
+          "catalectic",
+          "hypercatalectic"
+        ]
+      ],
+      "pole_names": [
+        "poetry"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "acatalectic",
+          "word2": "hypercatalectic",
+          "synset1": "acatalectic.a.01",
+          "synset2": "hypercatalectic.a.01"
+        },
+        {
+          "word1": "acatalectic",
+          "word2": "catalectic",
+          "synset1": "acatalectic.a.01",
+          "synset2": "catalectic.a.01"
+        },
+        {
+          "word1": "catalectic",
+          "word2": "hypercatalectic",
+          "synset1": "catalectic.a.01",
+          "synset2": "hypercatalectic.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 26,
+      "name": "stress",
+      "cluster_id": 1602,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "accentual",
+          "quantitative",
+          "syllabic"
+        ]
+      ],
+      "pole_names": [
+        "pertaining"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "accentual",
+          "word2": "quantitative",
+          "synset1": "accentual.a.02",
+          "synset2": "quantitative.a.03"
+        },
+        {
+          "word1": "accentual",
+          "word2": "syllabic",
+          "synset1": "accentual.a.02",
+          "synset2": "syllabic.a.03"
+        },
+        {
+          "word1": "quantitative",
+          "word2": "syllabic",
+          "synset1": "quantitative.a.03",
+          "synset2": "syllabic.a.03"
+        }
+      ]
+    },
+    {
+      "axis_id": 27,
+      "name": "high",
+      "cluster_id": 1624,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "hypertensive",
+          "hypotensive",
+          "normotensive"
+        ]
+      ],
+      "pole_names": [
+        "high"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "hypertensive",
+          "word2": "normotensive",
+          "synset1": "hypertensive.a.01",
+          "synset2": "normotensive.a.01"
+        },
+        {
+          "word1": "hypertensive",
+          "word2": "hypotensive",
+          "synset1": "hypertensive.a.01",
+          "synset2": "hypotensive.a.01"
+        },
+        {
+          "word1": "hypotensive",
+          "word2": "normotensive",
+          "synset1": "hypotensive.a.01",
+          "synset2": "normotensive.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 28,
+      "name": "constantly",
+      "cluster_id": 1664,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "ecdemic",
+          "endemic",
+          "epidemic"
+        ]
+      ],
+      "pole_names": [
+        "relating"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "endemic",
+          "word2": "epidemic",
+          "synset1": "endemic.a.01",
+          "synset2": "epidemic.a.01"
+        },
+        {
+          "word1": "ecdemic",
+          "word2": "epidemic",
+          "synset1": "ecdemic.a.01",
+          "synset2": "epidemic.a.01"
+        },
+        {
+          "word1": "ecdemic",
+          "word2": "endemic",
+          "synset1": "ecdemic.a.01",
+          "synset2": "endemic.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 29,
+      "name": "science",
+      "cluster_id": 1684,
+      "size": 3,
+      "coherence_score": 0.5833333333333334,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "e-mail",
+          "electronic_mail",
+          "email",
+          "snail_mail"
+        ]
+      ],
+      "pole_names": [
+        "mail"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "email",
+          "word2": "snail_mail",
+          "synset1": "electronic_mail.n.01",
+          "synset2": "snail_mail.n.01"
+        },
+        {
+          "word1": "electronic_mail",
+          "word2": "snail_mail",
+          "synset1": "electronic_mail.n.01",
+          "synset2": "snail_mail.n.01"
+        },
+        {
+          "word1": "e-mail",
+          "word2": "snail_mail",
+          "synset1": "electronic_mail.n.01",
+          "synset2": "snail_mail.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 30,
+      "name": "fashioned",
+      "cluster_id": 1699,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "one-piece",
+          "three-piece",
+          "two-piece"
+        ]
+      ],
+      "pole_names": [
+        "fashioned"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "one-piece",
+          "word2": "three-piece",
+          "synset1": "one-piece.a.01",
+          "synset2": "three-piece.a.01"
+        },
+        {
+          "word1": "one-piece",
+          "word2": "two-piece",
+          "synset1": "one-piece.a.01",
+          "synset2": "two-piece.a.01"
+        },
+        {
+          "word1": "three-piece",
+          "word2": "two-piece",
+          "synset1": "three-piece.a.01",
+          "synset2": "two-piece.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 31,
+      "name": "old",
+      "cluster_id": 1791,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "catarrhine",
+          "leptorrhine",
+          "platyrrhine"
+        ]
+      ],
+      "pole_names": [
+        "africa"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "catarrhine",
+          "word2": "platyrrhine",
+          "synset1": "catarrhine.a.01",
+          "synset2": "platyrrhine.a.01"
+        },
+        {
+          "word1": "leptorrhine",
+          "word2": "platyrrhine",
+          "synset1": "leptorrhine.a.01",
+          "synset2": "platyrrhine.a.01"
+        },
+        {
+          "word1": "catarrhine",
+          "word2": "leptorrhine",
+          "synset1": "catarrhine.a.01",
+          "synset2": "leptorrhine.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 32,
+      "name": "intermediate",
+      "cluster_id": 1959,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "lower-class",
+          "middle-class",
+          "upper-class"
+        ]
+      ],
+      "pole_names": [
+        "intermediate"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "middle-class",
+          "word2": "upper-class",
+          "synset1": "middle-class.a.01",
+          "synset2": "upper-class.a.01"
+        },
+        {
+          "word1": "lower-class",
+          "word2": "middle-class",
+          "synset1": "lower-class.a.01",
+          "synset2": "middle-class.a.01"
+        },
+        {
+          "word1": "lower-class",
+          "word2": "upper-class",
+          "synset1": "lower-class.a.01",
+          "synset2": "upper-class.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 33,
+      "name": "pollen",
+      "cluster_id": 2030,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "autogamous",
+          "endogamous",
+          "exogamous"
+        ]
+      ],
+      "pole_names": [
+        "autogamy"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "endogamous",
+          "word2": "exogamous",
+          "synset1": "endogamous.a.01",
+          "synset2": "exogamous.a.01"
+        },
+        {
+          "word1": "autogamous",
+          "word2": "exogamous",
+          "synset1": "autogamous.a.01",
+          "synset2": "exogamous.a.01"
+        },
+        {
+          "word1": "autogamous",
+          "word2": "endogamous",
+          "synset1": "autogamous.a.01",
+          "synset2": "endogamous.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 34,
+      "name": "involving",
+      "cluster_id": 2047,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "air-to-air",
+          "air-to-surface",
+          "surface-to-air"
+        ]
+      ],
+      "pole_names": [
+        "involving"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "air-to-air",
+          "word2": "surface-to-air",
+          "synset1": "air-to-air.a.01",
+          "synset2": "surface-to-air.a.01"
+        },
+        {
+          "word1": "air-to-air",
+          "word2": "air-to-surface",
+          "synset1": "air-to-air.a.01",
+          "synset2": "air-to-surface.a.01"
+        },
+        {
+          "word1": "air-to-surface",
+          "word2": "surface-to-air",
+          "synset1": "air-to-surface.a.01",
+          "synset2": "surface-to-air.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 35,
+      "name": "grammatical",
+      "cluster_id": 2120,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "feminine",
+          "masculine",
+          "neuter"
+        ]
+      ],
+      "pole_names": [
+        "males"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "masculine",
+          "word2": "neuter",
+          "synset1": "masculine.a.01",
+          "synset2": "neuter.a.01"
+        },
+        {
+          "word1": "feminine",
+          "word2": "neuter",
+          "synset1": "feminine.a.02",
+          "synset2": "neuter.a.01"
+        },
+        {
+          "word1": "feminine",
+          "word2": "masculine",
+          "synset1": "feminine.a.02",
+          "synset2": "masculine.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 36,
+      "name": "immediately",
+      "cluster_id": 2178,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "perinatal",
+          "postnatal",
+          "prenatal"
+        ]
+      ],
+      "pole_names": [
+        "period"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "postnatal",
+          "word2": "prenatal",
+          "synset1": "postnatal.a.01",
+          "synset2": "prenatal.a.01"
+        },
+        {
+          "word1": "perinatal",
+          "word2": "postnatal",
+          "synset1": "perinatal.a.01",
+          "synset2": "postnatal.a.01"
+        },
+        {
+          "word1": "perinatal",
+          "word2": "prenatal",
+          "synset1": "perinatal.a.01",
+          "synset2": "prenatal.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 37,
+      "name": "autumn",
+      "cluster_id": 2179,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "autumnal",
+          "summery",
+          "vernal",
+          "wintry"
+        ]
+      ],
+      "pole_names": [
+        "winter"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "autumnal",
+          "word2": "wintry",
+          "synset1": "autumnal.a.01",
+          "synset2": "wintry.a.01"
+        },
+        {
+          "word1": "autumnal",
+          "word2": "summery",
+          "synset1": "autumnal.a.01",
+          "synset2": "summery.a.01"
+        },
+        {
+          "word1": "autumnal",
+          "word2": "vernal",
+          "synset1": "autumnal.a.01",
+          "synset2": "vernal.a.02"
+        }
+      ]
+    },
+    {
+      "axis_id": 38,
+      "name": "spring",
+      "cluster_id": 2180,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "summery",
+          "vernal",
+          "wintry"
+        ]
+      ],
+      "pole_names": [
+        "winter"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "vernal",
+          "word2": "wintry",
+          "synset1": "vernal.a.02",
+          "synset2": "wintry.a.01"
+        },
+        {
+          "word1": "summery",
+          "word2": "vernal",
+          "synset1": "summery.a.01",
+          "synset2": "vernal.a.02"
+        },
+        {
+          "word1": "summery",
+          "word2": "wintry",
+          "synset1": "summery.a.01",
+          "synset2": "wintry.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 39,
+      "name": "used",
+      "cluster_id": 2199,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "early",
+          "late",
+          "middle"
+        ]
+      ],
+      "pole_names": [
+        "area"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "late",
+          "word2": "middle",
+          "synset1": "late.a.05",
+          "synset2": "middle.a.03"
+        },
+        {
+          "word1": "early",
+          "word2": "late",
+          "synset1": "early.a.05",
+          "synset2": "late.a.05"
+        },
+        {
+          "word1": "early",
+          "word2": "middle",
+          "synset1": "early.a.05",
+          "synset2": "middle.a.03"
+        }
+      ]
+    },
+    {
+      "axis_id": 40,
+      "name": "located",
+      "cluster_id": 2391,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "overhead",
+          "subsurface",
+          "surface"
+        ]
+      ],
+      "pole_names": [
+        "beneath"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "overhead",
+          "word2": "subsurface",
+          "synset1": "overhead.a.01",
+          "synset2": "subsurface.a.01"
+        },
+        {
+          "word1": "subsurface",
+          "word2": "surface",
+          "synset1": "subsurface.a.01",
+          "synset2": "surface.a.01"
+        },
+        {
+          "word1": "overhead",
+          "word2": "surface",
+          "synset1": "overhead.a.01",
+          "synset2": "surface.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 41,
+      "name": "structure",
+      "cluster_id": 2450,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "analogous",
+          "heterologous",
+          "homologous"
+        ]
+      ],
+      "pole_names": [
+        "corresponding"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "heterologous",
+          "word2": "homologous",
+          "synset1": "heterologous.a.01",
+          "synset2": "homologous.a.01"
+        },
+        {
+          "word1": "analogous",
+          "word2": "heterologous",
+          "synset1": "analogous.a.02",
+          "synset2": "heterologous.a.01"
+        },
+        {
+          "word1": "analogous",
+          "word2": "homologous",
+          "synset1": "analogous.a.02",
+          "synset2": "homologous.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 42,
+      "name": "higher",
+      "cluster_id": 2548,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "hypertonic",
+          "hypotonic",
+          "isotonic"
+        ]
+      ],
+      "pole_names": [
+        "state"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "hypertonic",
+          "word2": "hypotonic",
+          "synset1": "hypertonic.a.02",
+          "synset2": "hypotonic.a.02"
+        },
+        {
+          "word1": "hypertonic",
+          "word2": "isotonic",
+          "synset1": "hypertonic.a.02",
+          "synset2": "isotonic.a.01"
+        },
+        {
+          "word1": "hypotonic",
+          "word2": "isotonic",
+          "synset1": "hypotonic.a.02",
+          "synset2": "isotonic.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 43,
+      "name": "used",
+      "cluster_id": 2631,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "anadromous",
+          "catadromous",
+          "diadromous"
+        ]
+      ],
+      "pole_names": [
+        "used"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "anadromous",
+          "word2": "catadromous",
+          "synset1": "anadromous.a.01",
+          "synset2": "catadromous.a.01"
+        },
+        {
+          "word1": "anadromous",
+          "word2": "diadromous",
+          "synset1": "anadromous.a.01",
+          "synset2": "diadromous.a.01"
+        },
+        {
+          "word1": "catadromous",
+          "word2": "diadromous",
+          "synset1": "catadromous.a.01",
+          "synset2": "diadromous.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 44,
+      "name": "neither",
+      "cluster_id": 2699,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "flat",
+          "natural",
+          "sharp"
+        ]
+      ],
+      "pole_names": [
+        "someone"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "flat",
+          "word2": "sharp",
+          "synset1": "flat.a.06",
+          "synset2": "sharp.a.10"
+        },
+        {
+          "word1": "flat",
+          "word2": "natural",
+          "synset1": "flat.a.06",
+          "synset2": "natural.a.05"
+        },
+        {
+          "word1": "natural",
+          "word2": "sharp",
+          "synset1": "natural.a.05",
+          "synset2": "sharp.a.10"
+        }
+      ]
+    },
+    {
+      "axis_id": 45,
+      "name": "bottom",
+      "cluster_id": 2702,
+      "size": 3,
+      "coherence_score": 0.4444444444444444,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "bottom",
+          "side",
+          "top"
+        ]
+      ],
+      "pole_names": [
+        "lower"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "bottom",
+          "word2": "top",
+          "synset1": "bottom.a.01",
+          "synset2": "top.a.01"
+        },
+        {
+          "word1": "bottom",
+          "word2": "side",
+          "synset1": "bottom.a.01",
+          "synset2": "side.a.01"
+        },
+        {
+          "word1": "side",
+          "word2": "top",
+          "synset1": "side.a.01",
+          "synset2": "top.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 46,
+      "name": "two",
+      "cluster_id": 2871,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "binucleate",
+          "mononuclear",
+          "trinucleate"
+        ]
+      ],
+      "pole_names": [
+        "one"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "binucleate",
+          "word2": "trinucleate",
+          "synset1": "binucleate.a.01",
+          "synset2": "trinucleate.a.01"
+        },
+        {
+          "word1": "mononuclear",
+          "word2": "trinucleate",
+          "synset1": "mononuclear.a.01",
+          "synset2": "trinucleate.a.01"
+        },
+        {
+          "word1": "binucleate",
+          "word2": "mononuclear",
+          "synset1": "binucleate.a.01",
+          "synset2": "mononuclear.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 47,
+      "name": "equally",
+      "cluster_id": 2896,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "ambidextrous",
+          "left-handed",
+          "right-handed"
+        ]
+      ],
+      "pole_names": [
+        "right"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "ambidextrous",
+          "word2": "left-handed",
+          "synset1": "ambidextrous.a.01",
+          "synset2": "left-handed.a.01"
+        },
+        {
+          "word1": "left-handed",
+          "word2": "right-handed",
+          "synset1": "left-handed.a.01",
+          "synset2": "right-handed.a.01"
+        },
+        {
+          "word1": "ambidextrous",
+          "word2": "right-handed",
+          "synset1": "ambidextrous.a.01",
+          "synset2": "right-handed.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 48,
+      "name": "possessing",
+      "cluster_id": 3056,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "negative",
+          "neutral",
+          "positive"
+        ]
+      ],
+      "pole_names": [
+        "one"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "neutral",
+          "word2": "positive",
+          "synset1": "neutral.a.04",
+          "synset2": "positive.a.01"
+        },
+        {
+          "word1": "negative",
+          "word2": "positive",
+          "synset1": "negative.a.01",
+          "synset2": "positive.a.01"
+        },
+        {
+          "word1": "negative",
+          "word2": "neutral",
+          "synset1": "negative.a.01",
+          "synset2": "neutral.a.04"
+        }
+      ]
+    },
+    {
+      "axis_id": 49,
+      "name": "selfsame",
+      "cluster_id": 3140,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "autologous",
+          "heterologous",
+          "homologous"
+        ]
+      ],
+      "pole_names": [
+        "corresponding"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "autologous",
+          "word2": "heterologous",
+          "synset1": "autologous.a.01",
+          "synset2": "heterologous.a.02"
+        },
+        {
+          "word1": "autologous",
+          "word2": "homologous",
+          "synset1": "autologous.a.01",
+          "synset2": "homologous.a.02"
+        },
+        {
+          "word1": "heterologous",
+          "word2": "homologous",
+          "synset1": "heterologous.a.02",
+          "synset2": "homologous.a.02"
+        }
+      ]
+    },
+    {
+      "axis_id": 50,
+      "name": "solution",
+      "cluster_id": 3232,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "acidic",
+          "alkaline",
+          "amphoteric"
+        ]
+      ],
+      "pole_names": [
+        "solution"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "acidic",
+          "word2": "alkaline",
+          "synset1": "acidic.a.01",
+          "synset2": "alkaline.a.01"
+        },
+        {
+          "word1": "alkaline",
+          "word2": "amphoteric",
+          "synset1": "alkaline.a.01",
+          "synset2": "amphoteric.a.01"
+        },
+        {
+          "word1": "acidic",
+          "word2": "amphoteric",
+          "synset1": "acidic.a.01",
+          "synset2": "amphoteric.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 51,
+      "name": "little",
+      "cluster_id": 3283,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "ectomorphic",
+          "endomorphic",
+          "mesomorphic"
+        ]
+      ],
+      "pole_names": [
+        "squat"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "ectomorphic",
+          "word2": "endomorphic",
+          "synset1": "ectomorphic.a.01",
+          "synset2": "endomorphic.a.01"
+        },
+        {
+          "word1": "endomorphic",
+          "word2": "mesomorphic",
+          "synset1": "endomorphic.a.01",
+          "synset2": "mesomorphic.a.01"
+        },
+        {
+          "word1": "ectomorphic",
+          "word2": "mesomorphic",
+          "synset1": "ectomorphic.a.01",
+          "synset2": "mesomorphic.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 52,
+      "name": "angle",
+      "cluster_id": 3289,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "horizontal",
+          "inclined",
+          "vertical"
+        ]
+      ],
+      "pole_names": [
+        "vertically"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "inclined",
+          "word2": "vertical",
+          "synset1": "inclined.a.02",
+          "synset2": "vertical.a.01"
+        },
+        {
+          "word1": "horizontal",
+          "word2": "inclined",
+          "synset1": "horizontal.a.01",
+          "synset2": "inclined.a.02"
+        },
+        {
+          "word1": "horizontal",
+          "word2": "vertical",
+          "synset1": "horizontal.a.01",
+          "synset2": "vertical.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 53,
+      "name": "single",
+      "cluster_id": 3311,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "diploid",
+          "haploid",
+          "polyploid"
+        ]
+      ],
+      "pole_names": [
+        "normal"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "haploid",
+          "word2": "polyploid",
+          "synset1": "haploid.a.01",
+          "synset2": "polyploid.a.01"
+        },
+        {
+          "word1": "diploid",
+          "word2": "polyploid",
+          "synset1": "diploid.a.01",
+          "synset2": "polyploid.a.01"
+        },
+        {
+          "word1": "diploid",
+          "word2": "haploid",
+          "synset1": "diploid.a.01",
+          "synset2": "haploid.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 54,
+      "name": "less",
+      "cluster_id": 3409,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "sonic",
+          "subsonic",
+          "supersonic"
+        ]
+      ],
+      "pole_names": [
+        "less"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "subsonic",
+          "word2": "supersonic",
+          "synset1": "subsonic.a.01",
+          "synset2": "supersonic.a.01"
+        },
+        {
+          "word1": "sonic",
+          "word2": "subsonic",
+          "synset1": "sonic.a.01",
+          "synset2": "subsonic.a.01"
+        },
+        {
+          "word1": "sonic",
+          "word2": "supersonic",
+          "synset1": "sonic.a.01",
+          "synset2": "supersonic.a.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 55,
+      "name": "especially",
+      "cluster_id": 3530,
+      "size": 3,
+      "coherence_score": 0.3333333333333333,
+      "separation_score": 0.5,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "gaseous",
+          "liquid",
+          "solid"
+        ]
+      ],
+      "pole_names": [
+        "matter"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "liquid",
+          "word2": "solid",
+          "synset1": "liquid.a.01",
+          "synset2": "solid.a.02"
+        },
+        {
+          "word1": "gaseous",
+          "word2": "liquid",
+          "synset1": "gaseous.a.01",
+          "synset2": "liquid.a.01"
+        },
+        {
+          "word1": "gaseous",
+          "word2": "solid",
+          "synset1": "gaseous.a.01",
+          "synset2": "solid.a.02"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "total_axes": 56,
+    "mean_size": 3.0535714285714284,
+    "mean_coherence": 0.34374999999999994,
+    "mean_separation": 0.5
+  }
+}

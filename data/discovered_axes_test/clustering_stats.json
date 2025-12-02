@@ -1,0 +1,13 @@
+{
+  "total_antonym_pairs": 500,
+  "n_clusters": 495,
+  "n_singletons": 490,
+  "singleton_rate": 0.98989898989899,
+  "min_cluster_size": 1,
+  "max_cluster_size": 2,
+  "mean_cluster_size": 1.0101010101010102,
+  "median_cluster_size": 1.0,
+  "large_clusters": [],
+  "silhouette_score": -1.0,
+  "optimal_height": 0.5
+}

@@ -1,0 +1,846 @@
+{
+  "axes": [
+    {
+      "axis_id": 0,
+      "name": "quality",
+      "cluster_id": 227,
+      "size": 4,
+      "coherence_score": 1.0,
+      "separation_score": 0.8571428571428572,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "undependability",
+          "undependableness",
+          "unreliability",
+          "unreliableness"
+        ],
+        [
+          "dependability",
+          "dependableness",
+          "reliability",
+          "reliableness"
+        ]
+      ],
+      "pole_names": [
+        "trait",
+        "quality"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "reliability",
+          "word2": "unreliability",
+          "synset1": "dependability.n.01",
+          "synset2": "undependability.n.01"
+        },
+        {
+          "word1": "dependableness",
+          "word2": "undependableness",
+          "synset1": "dependability.n.01",
+          "synset2": "undependability.n.01"
+        },
+        {
+          "word1": "dependability",
+          "word2": "undependability",
+          "synset1": "dependability.n.01",
+          "synset2": "undependability.n.01"
+        },
+        {
+          "word1": "reliableness",
+          "word2": "unreliableness",
+          "synset1": "dependability.n.01",
+          "synset2": "undependability.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 1,
+      "name": "declare",
+      "cluster_id": 931,
+      "size": 4,
+      "coherence_score": 1.0,
+      "separation_score": 0.8911064425770308,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "decriminalise",
+          "decriminalize",
+          "legalise",
+          "legalize"
+        ],
+        [
+          "criminalise",
+          "criminalize",
+          "outlaw"
+        ]
+      ],
+      "pole_names": [
+        "make",
+        "declare"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "criminalize",
+          "word2": "decriminalize",
+          "synset1": "outlaw.v.01",
+          "synset2": "legalize.v.01"
+        },
+        {
+          "word1": "legalize",
+          "word2": "outlaw",
+          "synset1": "legalize.v.01",
+          "synset2": "outlaw.v.01"
+        },
+        {
+          "word1": "legalise",
+          "word2": "outlaw",
+          "synset1": "legalize.v.01",
+          "synset2": "outlaw.v.01"
+        },
+        {
+          "word1": "criminalise",
+          "word2": "decriminalise",
+          "synset1": "outlaw.v.01",
+          "synset2": "legalize.v.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 2,
+      "name": "less",
+      "cluster_id": 1570,
+      "size": 4,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "decentralise",
+          "decentralize",
+          "deconcentrate"
+        ],
+        [
+          "centralise",
+          "centralize",
+          "concentrate"
+        ]
+      ],
+      "pole_names": [
+        "make",
+        "desired"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "centralize",
+          "word2": "decentralize",
+          "synset1": "centralize.v.01",
+          "synset2": "decentralize.v.01"
+        },
+        {
+          "word1": "concentrate",
+          "word2": "deconcentrate",
+          "synset1": "centralize.v.01",
+          "synset2": "decentralize.v.01"
+        },
+        {
+          "word1": "centralise",
+          "word2": "decentralize",
+          "synset1": "centralize.v.01",
+          "synset2": "decentralize.v.01"
+        },
+        {
+          "word1": "centralise",
+          "word2": "decentralise",
+          "synset1": "centralize.v.01",
+          "synset2": "decentralize.v.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 3,
+      "name": "level",
+      "cluster_id": 1958,
+      "size": 4,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "up",
+          "upward",
+          "upwardly",
+          "upwards"
+        ],
+        [
+          "down",
+          "downward",
+          "downwardly",
+          "downwards"
+        ]
+      ],
+      "pole_names": [
+        "spatially",
+        "spatially"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "down",
+          "word2": "up",
+          "synset1": "down.r.01",
+          "synset2": "up.r.01"
+        },
+        {
+          "word1": "downward",
+          "word2": "upward",
+          "synset1": "down.r.01",
+          "synset2": "up.r.01"
+        },
+        {
+          "word1": "downwardly",
+          "word2": "upwardly",
+          "synset1": "down.r.01",
+          "synset2": "up.r.01"
+        },
+        {
+          "word1": "downwards",
+          "word2": "upwards",
+          "synset1": "down.r.01",
+          "synset2": "up.r.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 4,
+      "name": "active",
+      "cluster_id": 404,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "inaction",
+          "inactiveness",
+          "inactivity"
+        ],
+        [
+          "action",
+          "activeness",
+          "activity"
+        ]
+      ],
+      "pole_names": [
+        "state",
+        "done"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "action",
+          "word2": "inaction",
+          "synset1": "action.n.02",
+          "synset2": "inaction.n.01"
+        },
+        {
+          "word1": "activeness",
+          "word2": "inactiveness",
+          "synset1": "action.n.02",
+          "synset2": "inaction.n.01"
+        },
+        {
+          "word1": "activity",
+          "word2": "inactivity",
+          "synset1": "action.n.02",
+          "synset2": "inaction.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 5,
+      "name": "act",
+      "cluster_id": 464,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "engagement",
+          "involvement",
+          "participation"
+        ],
+        [
+          "non-engagement",
+          "non-involvement",
+          "nonparticipation"
+        ]
+      ],
+      "pole_names": [
+        "hostile",
+        "withdrawing"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "engagement",
+          "word2": "non-engagement",
+          "synset1": "engagement.n.07",
+          "synset2": "non-engagement.n.01"
+        },
+        {
+          "word1": "involvement",
+          "word2": "non-involvement",
+          "synset1": "engagement.n.07",
+          "synset2": "non-engagement.n.01"
+        },
+        {
+          "word1": "nonparticipation",
+          "word2": "participation",
+          "synset1": "non-engagement.n.01",
+          "synset2": "engagement.n.07"
+        }
+      ]
+    },
+    {
+      "axis_id": 6,
+      "name": "tangle",
+      "cluster_id": 629,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.65625,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "unknot",
+          "unravel"
+        ],
+        [
+          "knot",
+          "ravel"
+        ]
+      ],
+      "pole_names": [
+        "become",
+        "tight"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "ravel",
+          "word2": "unravel",
+          "synset1": "ravel.v.02",
+          "synset2": "unravel.v.01"
+        },
+        {
+          "word1": "ravel",
+          "word2": "unravel",
+          "synset1": "ravel.v.02",
+          "synset2": "ravel.v.01"
+        },
+        {
+          "word1": "knot",
+          "word2": "unknot",
+          "synset1": "ravel.v.02",
+          "synset2": "unravel.v.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 7,
+      "name": "turn",
+      "cluster_id": 648,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "homogenise",
+          "homogenize"
+        ],
+        [
+          "curdle"
+        ]
+      ],
+      "pole_names": [
+        "cause",
+        "turn"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "curdle",
+          "word2": "homogenise",
+          "synset1": "curdle.v.01",
+          "synset2": "homogenize.v.03"
+        },
+        {
+          "word1": "curdle",
+          "word2": "homogenize",
+          "synset1": "curdle.v.01",
+          "synset2": "homogenize.v.02"
+        },
+        {
+          "word1": "curdle",
+          "word2": "homogenise",
+          "synset1": "curdle.v.01",
+          "synset2": "homogenize.v.02"
+        }
+      ]
+    },
+    {
+      "axis_id": 8,
+      "name": "unrelated",
+      "cluster_id": 700,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "asynchronism",
+          "desynchronization",
+          "desynchronizing"
+        ],
+        [
+          "synchronism",
+          "synchronization",
+          "synchronizing"
+        ]
+      ],
+      "pole_names": [
+        "relation",
+        "relation"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "desynchronizing",
+          "word2": "synchronizing",
+          "synset1": "asynchronism.n.01",
+          "synset2": "synchronism.n.01"
+        },
+        {
+          "word1": "desynchronization",
+          "word2": "synchronization",
+          "synset1": "asynchronism.n.01",
+          "synset2": "synchronism.n.01"
+        },
+        {
+          "word1": "asynchronism",
+          "word2": "synchronism",
+          "synset1": "asynchronism.n.01",
+          "synset2": "synchronism.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 9,
+      "name": "faithful",
+      "cluster_id": 1105,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "dependably",
+          "faithfully",
+          "reliably"
+        ],
+        [
+          "undependably",
+          "unfaithfully",
+          "unreliably"
+        ]
+      ],
+      "pole_names": [
+        "faithful",
+        "unfaithful"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "faithfully",
+          "word2": "unfaithfully",
+          "synset1": "faithfully.r.01",
+          "synset2": "unfaithfully.r.01"
+        },
+        {
+          "word1": "dependably",
+          "word2": "undependably",
+          "synset1": "faithfully.r.01",
+          "synset2": "unfaithfully.r.01"
+        },
+        {
+          "word1": "reliably",
+          "word2": "unreliably",
+          "synset1": "faithfully.r.01",
+          "synset2": "unfaithfully.r.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 10,
+      "name": "disapproved",
+      "cluster_id": 1325,
+      "size": 3,
+      "coherence_score": 0.888888888888889,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "illegitimately",
+          "illicitly",
+          "lawlessly"
+        ],
+        [
+          "lawfully",
+          "legitimately",
+          "licitly"
+        ]
+      ],
+      "pole_names": [
+        "illegal",
+        "manner"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "illicitly",
+          "word2": "licitly",
+          "synset1": "illegitimately.r.01",
+          "synset2": "legitimately.r.01"
+        },
+        {
+          "word1": "lawfully",
+          "word2": "lawlessly",
+          "synset1": "legitimately.r.01",
+          "synset2": "illegally.r.01"
+        },
+        {
+          "word1": "illegitimately",
+          "word2": "legitimately",
+          "synset1": "illegitimately.r.01",
+          "synset2": "legitimately.r.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 11,
+      "name": "science",
+      "cluster_id": 1684,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.8333333333333334,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "e-mail",
+          "electronic_mail",
+          "email"
+        ],
+        [
+          "snail_mail"
+        ]
+      ],
+      "pole_names": [
+        "computer",
+        "mail"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "email",
+          "word2": "snail_mail",
+          "synset1": "electronic_mail.n.01",
+          "synset2": "snail_mail.n.01"
+        },
+        {
+          "word1": "electronic_mail",
+          "word2": "snail_mail",
+          "synset1": "electronic_mail.n.01",
+          "synset2": "snail_mail.n.01"
+        },
+        {
+          "word1": "e-mail",
+          "word2": "snail_mail",
+          "synset1": "electronic_mail.n.01",
+          "synset2": "snail_mail.n.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 12,
+      "name": "productive",
+      "cluster_id": 1838,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "fruitlessly",
+          "unproductively",
+          "unprofitably"
+        ],
+        [
+          "fruitfully",
+          "productively",
+          "profitably"
+        ]
+      ],
+      "pole_names": [
+        "without",
+        "productive"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "productively",
+          "word2": "unproductively",
+          "synset1": "productively.r.01",
+          "synset2": "unproductively.r.01"
+        },
+        {
+          "word1": "profitably",
+          "word2": "unprofitably",
+          "synset1": "productively.r.01",
+          "synset2": "unproductively.r.01"
+        },
+        {
+          "word1": "fruitfully",
+          "word2": "fruitlessly",
+          "synset1": "productively.r.01",
+          "synset2": "unproductively.r.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 13,
+      "name": "excusable",
+      "cluster_id": 1865,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "inexcusably",
+          "unforgivably",
+          "unpardonably"
+        ],
+        [
+          "excusably",
+          "forgivably",
+          "pardonably"
+        ]
+      ],
+      "pole_names": [
+        "unpardonable",
+        "excusable"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "excusably",
+          "word2": "inexcusably",
+          "synset1": "excusably.r.01",
+          "synset2": "inexcusably.r.01"
+        },
+        {
+          "word1": "pardonably",
+          "word2": "unpardonably",
+          "synset1": "excusably.r.01",
+          "synset2": "inexcusably.r.01"
+        },
+        {
+          "word1": "forgivably",
+          "word2": "unforgivably",
+          "synset1": "excusably.r.01",
+          "synset2": "inexcusably.r.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 14,
+      "name": "deprive",
+      "cluster_id": 2115,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.7454545454545454,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "energise",
+          "energize",
+          "stimulate"
+        ],
+        [
+          "de-energise",
+          "de-energize"
+        ],
+        [
+          "sedate"
+        ]
+      ],
+      "pole_names": [
+        "raise",
+        "deprive",
+        "cause"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "de-energise",
+          "word2": "energise",
+          "synset1": "de-energize.v.01",
+          "synset2": "stimulate.v.04"
+        },
+        {
+          "word1": "sedate",
+          "word2": "stimulate",
+          "synset1": "sedate.v.01",
+          "synset2": "stimulate.v.04"
+        },
+        {
+          "word1": "de-energize",
+          "word2": "energize",
+          "synset1": "de-energize.v.01",
+          "synset2": "stimulate.v.04"
+        }
+      ]
+    },
+    {
+      "axis_id": 15,
+      "name": "intentional",
+      "cluster_id": 2399,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "accidentally",
+          "unintentionally"
+        ],
+        [
+          "deliberately",
+          "intentionally"
+        ]
+      ],
+      "pole_names": [
+        "advance",
+        "intention"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "intentionally",
+          "word2": "unintentionally",
+          "synset1": "intentionally.r.01",
+          "synset2": "unintentionally.r.01"
+        },
+        {
+          "word1": "accidentally",
+          "word2": "deliberately",
+          "synset1": "unintentionally.r.01",
+          "synset2": "intentionally.r.01"
+        },
+        {
+          "word1": "accidentally",
+          "word2": "deliberately",
+          "synset1": "by_chance.r.03",
+          "synset2": "intentionally.r.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 16,
+      "name": "without",
+      "cluster_id": 2400,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666666,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "inadvertently",
+          "unknowingly",
+          "unwittingly"
+        ],
+        [
+          "knowingly",
+          "wittingly"
+        ],
+        [
+          "advertently"
+        ]
+      ],
+      "pole_names": [
+        "without",
+        "full",
+        "careful"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "unwittingly",
+          "word2": "wittingly",
+          "synset1": "unwittingly.r.01",
+          "synset2": "wittingly.r.01"
+        },
+        {
+          "word1": "advertently",
+          "word2": "inadvertently",
+          "synset1": "mindfully.r.01",
+          "synset2": "unwittingly.r.01"
+        },
+        {
+          "word1": "knowingly",
+          "word2": "unknowingly",
+          "synset1": "wittingly.r.01",
+          "synset2": "unwittingly.r.01"
+        }
+      ]
+    },
+    {
+      "axis_id": 17,
+      "name": "hypertonic",
+      "cluster_id": 2789,
+      "size": 3,
+      "coherence_score": 1.0,
+      "separation_score": 0.6666666666666667,
+      "source": "antonym_clustering",
+      "poles": [
+        [
+          "hypotonia",
+          "hypotonicity",
+          "hypotonus"
+        ],
+        [
+          "hypertonia",
+          "hypertonicity",
+          "hypertonus"
+        ]
+      ],
+      "pole_names": [
+        "extent",
+        "extent"
+      ],
+      "representative_pairs": [
+        {
+          "word1": "hypertonus",
+          "word2": "hypotonus",
+          "synset1": "hypertonia.n.01",
+          "synset2": "hypotonia.n.01"
+        },
+        {
+          "word1": "hypertonicity",
+          "word2": "hypotonicity",
+          "synset1": "hypertonia.n.01",
+          "synset2": "hypotonia.n.01"
+        },
+        {
+          "word1": "hypertonia",
+          "word2": "hypotonia",
+          "synset1": "hypertonia.n.01",
+          "synset2": "hypotonia.n.01"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "total_axes": 18,
+    "mean_size": 3.2222222222222223,
+    "mean_coherence": 0.9938271604938271,
+    "mean_separation": 0.7027752136208019
+  }
+}

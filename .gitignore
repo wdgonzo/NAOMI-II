@@ -30,6 +30,7 @@ data/parsed_definitions/
 data/embeddings/
 checkpoints/
 colab-results/
+deprecated/checkpoints*/  # Old checkpoint directories
 
 # Large binary/compressed files
 *.pkl
@@ -59,7 +60,7 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb
+.ipynb
 
 # Logs
 *.log

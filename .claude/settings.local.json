@@ -11,7 +11,8 @@
       "Bash(dir:*)",
       "Bash(timeout 10 sleep:*)",
       "Bash(nul)",
-      "Bash(timeout 5 sleep:*)"
+      "Bash(timeout 5 sleep:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
