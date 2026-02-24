@@ -1,0 +1,257 @@
+{
+    "metadata": {
+        "language": "japanese",
+        "version": "0.1-beta",
+        "author": "NAOMI-II",
+        "description": "Beta Japanese grammar (romaji) with SOV word order and particle-based role marking"
+    },
+
+    "order": [
+        "adv1",
+        "adj1",
+        "nominal1", "nominal2",
+        "particle1",
+        "verb1",
+        "predicate1",
+        "clause1", "clause2"
+    ],
+
+    "rulesets": {
+        "adv1": {
+            "description": "Adverb modification (totemo hayaku - very quickly)",
+            "result": "SPECIFIER",
+            "rules": [
+                {
+                    "result": "SPECIFIER",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": { "type": "SPECIFIER" },
+                        "before": [{ "type": "SPECIFIER", "quantifier": "one" }],
+                        "after": []
+                    },
+                    "connections": [{ "type": "SPECIFICATION", "from": "before[0]", "to": "anchor" }],
+                    "consume": ["before"],
+                    "note": "Example: totemo hayaku (very quickly)"
+                }
+            ]
+        },
+
+        "adj1": {
+            "description": "Pre-nominal adjective (shiroi ie - white house, ooki inu - big dog)",
+            "result": "NOUN",
+            "rules": [
+                {
+                    "result": "NOUN",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": { "type": "NOUN" },
+                        "before": [{ "type": "DESCRIPTOR", "quantifier": "all" }],
+                        "after": []
+                    },
+                    "connections": [{ "type": "DESCRIPTION", "from": "before[*]", "to": "anchor" }],
+                    "consume": ["before"],
+                    "note": "Example: shiroi ie (white house) - adjectives before noun in Japanese"
+                }
+            ]
+        },
+
+        "nominal1": {
+            "description": "Convert noun to nominal (no articles in Japanese)",
+            "result": "NOMINAL",
+            "rules": [
+                {
+                    "result": "NOMINAL",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "NOUN" },
+                        "before": [],
+                        "after": []
+                    },
+                    "connections": [],
+                    "consume": [],
+                    "note": "Japanese has no articles - bare noun becomes nominal"
+                }
+            ]
+        },
+
+        "nominal2": {
+            "description": "Coordinate nominals (inu to neko - dog and cat)",
+            "result": "NOMINAL",
+            "rules": [
+                {
+                    "result": "NOMINAL",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "COORD" },
+                        "before": [],
+                        "after": [{ "type": "COORD", "quantifier": "one", "check_original": true }]
+                    },
+                    "connections": [],
+                    "consume": ["after"],
+                    "note": "Consume duplicate COORD"
+                },
+                {
+                    "result": "NOMINAL",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": { "type": "COORD" },
+                        "before": [{ "type": "NOMINAL", "quantifier": "all" }],
+                        "after": [{ "type": "NOMINAL", "quantifier": "one" }]
+                    },
+                    "connections": [
+                        { "type": "COORDINATION", "from": "before[*]", "to": "anchor" },
+                        { "type": "COORDINATION", "from": "after[0]", "to": "anchor" }
+                    ],
+                    "consume": ["before", "after"],
+                    "note": "Example: inu to neko (dog and cat)"
+                }
+            ]
+        },
+
+        "particle1": {
+            "description": "Consume Japanese particles (ga, wo, wa) as modifications of preceding nominal",
+            "result": "NOMINAL",
+            "rules": [
+                {
+                    "result": "NOMINAL",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "NOMINAL" },
+                        "before": [],
+                        "after": [{ "type": "PREP", "quantifier": "one" }]
+                    },
+                    "connections": [{ "type": "MODIFICATION", "from": "after[0]", "to": "anchor" }],
+                    "consume": ["after"],
+                    "note": "Consume particle: inu ga -> NOMINAL(inu) with particle ga as modification"
+                }
+            ]
+        },
+
+        "verb1": {
+            "description": "Build verbal phrases with adverb modifiers (hayaku hashiru - quickly run)",
+            "result": "VERBAL",
+            "rules": [
+                {
+                    "result": "VERBAL",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": { "type": "VERBAL" },
+                        "before": [{ "type": "SPECIFIER", "quantifier": "one" }],
+                        "after": []
+                    },
+                    "connections": [{ "type": "SPECIFICATION", "from": "before[0]", "to": "anchor" }],
+                    "consume": ["before"],
+                    "note": "Example: hayaku hashiru (quickly run) - adverb before verb in Japanese"
+                }
+            ]
+        },
+
+        "predicate1": {
+            "description": "Build predicates - SOV order (object before verb)",
+            "result": "PREDICATE",
+            "rules": [
+                {
+                    "result": "PREDICATE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "VERBAL" },
+                        "before": [],
+                        "after": []
+                    },
+                    "connections": [],
+                    "consume": [],
+                    "note": "Intransitive: hashiru (runs)"
+                },
+                {
+                    "result": "PREDICATE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "VERBAL" },
+                        "before": [{ "type": "NOMINAL", "quantifier": "one" }],
+                        "after": []
+                    },
+                    "connections": [{ "type": "OBJECT", "from": "anchor", "to": "before[0]" }],
+                    "consume": ["before"],
+                    "note": "SOV transitive: neko wo ou (cat [OBJ] chase) - object BEFORE verb"
+                },
+                {
+                    "result": "PREDICATE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "VERBAL" },
+                        "before": [{ "type": "DESCRIPTOR", "quantifier": "one" }],
+                        "after": []
+                    },
+                    "connections": [{ "type": "COMPLEMENT", "from": "anchor", "to": "before[0]" }],
+                    "consume": ["before"],
+                    "note": "Copula complement before verb"
+                }
+            ]
+        },
+
+        "clause1": {
+            "description": "Build clauses from subject + predicate (SOV: subject before predicate)",
+            "result": "CLAUSE",
+            "rules": [
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "PREDICATE" },
+                        "before": [{ "type": "NOMINAL", "quantifier": "one" }],
+                        "after": []
+                    },
+                    "connections": [{ "type": "SUBJECT", "from": "anchor", "to": "before[0]" }],
+                    "consume": ["before"],
+                    "note": "Example: inu ga hashiru (dog [SUBJ] runs)"
+                },
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "PREDICATE" },
+                        "before": [],
+                        "after": []
+                    },
+                    "connections": [],
+                    "consume": [],
+                    "note": "Bare predicate (imperative or topic-less)"
+                }
+            ]
+        },
+
+        "clause2": {
+            "description": "Coordinate clauses",
+            "result": "CLAUSE",
+            "rules": [
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": { "type": "COORD" },
+                        "before": [],
+                        "after": [{ "type": "COORD", "quantifier": "one", "check_original": true }]
+                    },
+                    "connections": [],
+                    "consume": ["after"],
+                    "note": "Consume duplicate COORD"
+                },
+                {
+                    "result": "CLAUSE",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": { "type": "COORD" },
+                        "before": [{ "type": "CLAUSE", "quantifier": "all" }],
+                        "after": [{ "type": "CLAUSE", "quantifier": "one" }]
+                    },
+                    "connections": [
+                        { "type": "COORDINATION", "from": "before[*]", "to": "anchor" },
+                        { "type": "COORDINATION", "from": "after[0]", "to": "anchor" }
+                    ],
+                    "consume": ["before", "after"],
+                    "note": "Coordinate clauses"
+                }
+            ]
+        }
+    }
+}

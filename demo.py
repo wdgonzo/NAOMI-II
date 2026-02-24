@@ -1,12 +1,16 @@
 """
-NAOMI-II Interactive Bilingual Parser Demo
+NAOMI-II Interactive Multilingual Parser Demo
 
-Parses sentences in English and Spanish, producing language-agnostic
-semantic parse trees. Demonstrates that equivalent sentences in different
-languages yield identical abstract structures.
+Parses sentences in 6 languages — English, Spanish, French, German,
+Portuguese, and Japanese — producing language-agnostic semantic parse
+trees. Demonstrates that equivalent sentences in different languages
+yield identical abstract structures.
+
+The same parser engine + different grammar files = same meaning tree.
 
 Usage:
-    python demo.py
+    python demo.py           # Interactive mode
+    python demo.py --all     # Run all examples non-interactively
 """
 
 import sys
@@ -19,24 +23,77 @@ from src.parser import (
     QuantumParser, Word, Tag, SubType,
     hypothesis_to_dot, print_hypothesis_tree, save_dot
 )
-from src.parser.pos_tagger import tag_sentence, tag_spanish_sentence
+from src.parser.pos_tagger import (
+    tag_sentence, tag_spanish_sentence,
+    tag_french_sentence, tag_german_sentence,
+    tag_portuguese_sentence, tag_japanese_sentence,
+)
 
 
 # ---------------------------------------------------------------------------
-# Built-in example sentence pairs (English, Spanish)
+# Language configuration
 # ---------------------------------------------------------------------------
-EXAMPLE_PAIRS = [
-    ("The dog runs", "El perro corre"),
-    ("The big dog runs quickly", "El perro grande corre rápidamente"),
-    ("The dog chases the cat", "El perro persigue el gato"),
-    ("The white house", "La casa blanca"),
-    ("The dog and the cat", "El perro y el gato"),
-]
-
-# Grammar file paths (relative to project root)
 GRAMMAR_DIR = os.path.join(os.path.dirname(__file__), "current_work", "grammars")
-EN_GRAMMAR = os.path.join(GRAMMAR_DIR, "english.json")
-ES_GRAMMAR = os.path.join(GRAMMAR_DIR, "spanish.json")
+
+LANGUAGES = {
+    "english":    {"code": "EN", "grammar": "english.json",    "tagger": tag_sentence,            "status": "Production"},
+    "spanish":    {"code": "ES", "grammar": "spanish.json",    "tagger": tag_spanish_sentence,    "status": "Production"},
+    "french":     {"code": "FR", "grammar": "french.json",     "tagger": tag_french_sentence,     "status": "Beta"},
+    "german":     {"code": "DE", "grammar": "german.json",     "tagger": tag_german_sentence,     "status": "Beta"},
+    "portuguese": {"code": "PT", "grammar": "portuguese.json", "tagger": tag_portuguese_sentence, "status": "Beta"},
+    "japanese":   {"code": "JA", "grammar": "japanese.json",   "tagger": tag_japanese_sentence,   "status": "Beta"},
+}
+
+# ---------------------------------------------------------------------------
+# Built-in multilingual example sets
+# ---------------------------------------------------------------------------
+EXAMPLE_SETS = [
+    {
+        "label": "The dog runs",
+        "english": "The dog runs",
+        "spanish": "El perro corre",
+        "french": "Le chien court",
+        "german": "Der Hund rennt",
+        "portuguese": "O cachorro corre",
+        "japanese": "inu ga hashiru",
+    },
+    {
+        "label": "The dog chases the cat",
+        "english": "The dog chases the cat",
+        "spanish": "El perro persigue el gato",
+        "french": "Le chien poursuit le chat",
+        "german": "Der Hund jagt die Katze",
+        "portuguese": "O cachorro persegue o gato",
+        "japanese": "inu ga neko wo ou",
+    },
+    {
+        "label": "The big dog runs quickly",
+        "english": "The big dog runs quickly",
+        "spanish": "El perro grande corre rapidamente",
+        "french": "Le grand chien court vite",
+        "german": "Der grosse Hund rennt schnell",
+        "portuguese": "O grande cachorro corre rapidamente",
+        "japanese": "ooki inu ga hayaku hashiru",
+    },
+    {
+        "label": "The white house",
+        "english": "The white house",
+        "spanish": "La casa blanca",
+        "french": "La maison blanche",
+        "german": "Das weisse Haus",
+        "portuguese": "A casa branca",
+        "japanese": "shiroi ie",
+    },
+    {
+        "label": "The dog and the cat",
+        "english": "The dog and the cat",
+        "spanish": "El perro y el gato",
+        "french": "Le chien et le chat",
+        "german": "Der Hund und die Katze",
+        "portuguese": "O cachorro e o gato",
+        "japanese": "inu to neko",
+    },
+]
 
 
 def parse_sentence(sentence: str, language: str) -> tuple:
@@ -44,16 +101,15 @@ def parse_sentence(sentence: str, language: str) -> tuple:
     Parse a sentence in the given language.
 
     Returns:
-        (hypothesis, chart) — best parse hypothesis and full chart
+        (hypothesis, chart, words) — best parse hypothesis, full chart, tagged words
     """
-    if language == "english":
-        words = tag_sentence(sentence)
-        parser = QuantumParser(EN_GRAMMAR)
-    elif language == "spanish":
-        words = tag_spanish_sentence(sentence)
-        parser = QuantumParser(ES_GRAMMAR)
-    else:
+    if language not in LANGUAGES:
         raise ValueError(f"Unsupported language: {language}")
+
+    lang = LANGUAGES[language]
+    words = lang["tagger"](sentence)
+    grammar_path = os.path.join(GRAMMAR_DIR, lang["grammar"])
+    parser = QuantumParser(grammar_path)
 
     chart = parser.parse(words)
     best = chart.best_hypothesis()
@@ -253,54 +309,30 @@ def _hierarchical_layout(G, hypothesis):
     return pos
 
 
-def render_comparison(en_hyp, es_hyp, en_sentence: str, es_sentence: str,
-                      similarity: float, save_path: str = None):
-    """Render side-by-side parse trees with structural similarity."""
-    try:
-        import matplotlib.pyplot as plt
-    except ImportError:
-        print("[matplotlib not installed — skipping visual comparison]")
-        return
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
-
-    render_tree_matplotlib(en_hyp, "English", ax=ax1, words_label=en_sentence)
-    render_tree_matplotlib(es_hyp, "Spanish", ax=ax2, words_label=es_sentence)
-
-    fig.suptitle(
-        f"Cross-Language Structural Comparison — Similarity: {similarity:.0%}",
-        fontsize=14, fontweight="bold", y=0.98
-    )
-
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
-
-    if save_path:
-        plt.savefig(save_path, dpi=150, bbox_inches="tight")
-        print(f"\n  Saved visualization to: {save_path}")
-
-    plt.show()
-
-
 # ---------------------------------------------------------------------------
 # Interactive CLI
 # ---------------------------------------------------------------------------
 def print_banner():
     print()
     print("=" * 64)
-    print("  NAOMI-II  —  Language-Agnostic Semantic Parser")
+    print("  NAOMI-II  —  Universal Semantic Parser")
     print("  Structure IS Meaning")
+    print("  6 Languages, 1 Abstract Tree")
     print("=" * 64)
     print()
 
 
 def mode_single(language: str):
     """Parse a single sentence in the chosen language."""
+    lang_info = LANGUAGES[language]
     lang_name = language.capitalize()
-    print(f"\n  [{lang_name} Mode] Enter a sentence (or 'back' to return):")
+    status = f" ({lang_info['status']})" if lang_info["status"] != "Production" else ""
+    print(f"\n  [{lang_name} Mode{status}] Enter a sentence to parse.")
+    print("  Press Enter to return to home menu.")
 
     while True:
         try:
-            sentence = input(f"\n  {lang_name}> ").strip()
+            sentence = input(f"\n  {lang_info['code']}> ").strip()
         except (EOFError, KeyboardInterrupt):
             break
 
@@ -337,20 +369,20 @@ def mode_single(language: str):
 
 
 def mode_compare():
-    """Compare equivalent sentences across languages."""
-    print("\n  [Comparison Mode]")
-    print("  Built-in example pairs:")
-    for i, (en, es) in enumerate(EXAMPLE_PAIRS):
-        print(f"    [{i+1}] \"{en}\"  <->  \"{es}\"")
-    print(f"    [{len(EXAMPLE_PAIRS)+1}] Enter custom pair")
+    """Compare equivalent sentences across all 6 languages."""
+    print("\n  [Multilingual Comparison]")
+    print("  Built-in example sets:")
+    for i, example in enumerate(EXAMPLE_SETS):
+        print(f"    [{i+1}] \"{example['label']}\"")
     print()
+    print("  Press Enter to return to home menu.")
 
     try:
-        choice = input("  Select (number or 'back'): ").strip()
+        choice = input("\n  Select> ").strip()
     except (EOFError, KeyboardInterrupt):
         return
 
-    if choice.lower() == "back":
+    if not choice or choice.lower() == "back":
         return
 
     try:
@@ -359,115 +391,135 @@ def mode_compare():
         print("  Invalid selection.")
         return
 
-    if idx == len(EXAMPLE_PAIRS):
-        # Custom pair
-        try:
-            en_sent = input("  English sentence: ").strip()
-            es_sent = input("  Spanish sentence: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            return
-    elif 0 <= idx < len(EXAMPLE_PAIRS):
-        en_sent, es_sent = EXAMPLE_PAIRS[idx]
-    else:
+    if not (0 <= idx < len(EXAMPLE_SETS)):
         print("  Invalid selection.")
         return
 
-    print(f"\n  Parsing English: \"{en_sent}\"")
-    try:
-        en_hyp, en_chart, en_words = parse_sentence(en_sent, "english")
-    except Exception as e:
-        print(f"  English parse error: {e}")
-        return
+    example = EXAMPLE_SETS[idx]
+    print(f"\n  Comparing: \"{example['label']}\" across 6 languages\n")
 
-    print(f"  Parsing Spanish: \"{es_sent}\"")
-    try:
-        es_hyp, es_chart, es_words = parse_sentence(es_sent, "spanish")
-    except Exception as e:
-        print(f"  Spanish parse error: {e}")
-        return
+    # Parse all languages
+    results = {}
+    en_sig = None
+    for lang_name, lang_info in LANGUAGES.items():
+        sentence = example.get(lang_name)
+        if not sentence:
+            continue
 
-    # Display text trees
-    print("\n" + "=" * 64)
-    print("  ENGLISH PARSE TREE")
-    print("=" * 64)
-    if en_hyp:
-        print_hypothesis_tree(en_hyp)
-        print(f"  Score: {en_hyp.score:.3f} | Edges: {len(en_hyp.edges)}")
+        try:
+            hyp, chart, words = parse_sentence(sentence, lang_name)
+            sig = get_structure_signature(hyp)
+            results[lang_name] = {
+                "sentence": sentence,
+                "hyp": hyp,
+                "score": hyp.score if hyp else 0,
+                "sig": sig,
+            }
+            if lang_name == "english":
+                en_sig = sig
+        except Exception as e:
+            print(f"  {lang_info['code']}: Parse error — {e}")
 
-    print("\n" + "=" * 64)
-    print("  SPANISH PARSE TREE")
-    print("=" * 64)
-    if es_hyp:
-        print_hypothesis_tree(es_hyp)
-        print(f"  Score: {es_hyp.score:.3f} | Edges: {len(es_hyp.edges)}")
+    # Display scores
+    print("  " + "-" * 60)
+    scores_line = "  "
+    for lang_name, r in results.items():
+        code = LANGUAGES[lang_name]["code"]
+        scores_line += f"{code}: {r['score']:.3f}  "
+    print(scores_line)
+    print("  " + "-" * 60)
 
-    # Structural comparison
-    en_sig = get_structure_signature(en_hyp)
-    es_sig = get_structure_signature(es_hyp)
-    similarity = compare_structures(en_sig, es_sig)
+    # Show each language
+    for lang_name, r in results.items():
+        code = LANGUAGES[lang_name]["code"]
+        status = LANGUAGES[lang_name]["status"]
+        sim = compare_structures(en_sig, r["sig"]) if en_sig else 0.0
+        tag = f" [{status}]" if status != "Production" else ""
+        print(f"  {code}{tag}: \"{r['sentence']}\"  —  score {r['score']:.3f}  |  vs EN: {sim:.0%}")
 
-    print("\n" + "=" * 64)
-    print("  STRUCTURAL COMPARISON")
-    print("=" * 64)
-    print(f"  English node types: {en_sig['node_types']}")
-    print(f"  Spanish node types: {es_sig['node_types']}")
-    print(f"  English edge types: {en_sig['edge_types']}")
-    print(f"  Spanish edge types: {es_sig['edge_types']}")
-    print(f"  Tree depth: EN={en_sig['depth']}  ES={es_sig['depth']}")
-    print(f"\n  Structural similarity: {similarity:.0%}")
+    # Overall structural comparison
+    if en_sig:
+        print()
+        all_match = True
+        for lang_name, r in results.items():
+            if lang_name == "english":
+                continue
+            sim = compare_structures(en_sig, r["sig"])
+            if sim < 0.8:
+                all_match = False
+                break
 
-    if similarity >= 0.8:
-        print("  >> The parse trees share the same abstract structure!")
-    elif similarity >= 0.5:
-        print("  >> The parse trees share significant structural overlap.")
-    else:
-        print("  >> The parse trees differ structurally.")
-
-    # Offer visual comparison
-    try:
-        resp = input("\n  Show side-by-side tree visualization? [y/N] ").strip().lower()
-        if resp == "y":
-            render_comparison(en_hyp, es_hyp, en_sent, es_sent, similarity)
-    except (EOFError, KeyboardInterrupt):
-        pass
+        if all_match:
+            print("  >> All languages produce the same abstract structure!")
+        else:
+            print("  >> Most languages share structural overlap (beta grammars may vary).")
 
 
 def run_demo_noninteractive():
-    """Run all example pairs non-interactively (for quick showcase)."""
+    """Run all example sets non-interactively (for quick showcase)."""
     print_banner()
-    print("  Running all built-in example pairs...\n")
+    print("  Running all built-in examples across 6 languages...\n")
 
-    en_parser = QuantumParser(EN_GRAMMAR)
-    es_parser = QuantumParser(ES_GRAMMAR)
+    for example in EXAMPLE_SETS:
+        print("=" * 64)
+        print(f'  "{example["label"]}"')
+        print("=" * 64)
 
-    for en_sent, es_sent in EXAMPLE_PAIRS:
-        print("-" * 64)
-        print(f'  EN: "{en_sent}"')
-        print(f'  ES: "{es_sent}"')
-        print()
+        # Parse all languages
+        results = {}
+        en_sig = None
+        for lang_name, lang_info in LANGUAGES.items():
+            sentence = example.get(lang_name)
+            if not sentence:
+                continue
+            try:
+                hyp, chart, words = parse_sentence(sentence, lang_name)
+                sig = get_structure_signature(hyp)
+                results[lang_name] = {
+                    "sentence": sentence,
+                    "hyp": hyp,
+                    "score": hyp.score if hyp else 0,
+                    "sig": sig,
+                }
+                if lang_name == "english":
+                    en_sig = sig
+            except Exception as e:
+                code = lang_info["code"]
+                print(f"  {code}: Error — {e}")
 
-        en_words = tag_sentence(en_sent)
-        es_words = tag_spanish_sentence(es_sent)
+        # Display compact results
+        for lang_name, r in results.items():
+            code = LANGUAGES[lang_name]["code"]
+            status = LANGUAGES[lang_name]["status"]
+            sim = compare_structures(en_sig, r["sig"]) if en_sig else 0.0
+            tag = "*" if status == "Beta" else " "
+            print(f"  {tag}{code}: \"{r['sentence']}\"")
+            print(f"       score {r['score']:.3f}  |  vs EN: {sim:.0%}")
 
-        en_chart = en_parser.parse(en_words)
-        es_chart = es_parser.parse(es_words)
-
-        en_hyp = en_chart.best_hypothesis()
-        es_hyp = es_chart.best_hypothesis()
-
-        en_sig = get_structure_signature(en_hyp)
-        es_sig = get_structure_signature(es_hyp)
-        similarity = compare_structures(en_sig, es_sig)
-
-        print(f"  EN score: {en_hyp.score:.3f} | ES score: {es_hyp.score:.3f}")
-        print(f"  Structural similarity: {similarity:.0%}")
-
-        if similarity >= 0.8:
-            print("  >> MATCH: Same abstract structure across languages")
+        # Check structural match
+        if en_sig:
+            matches = sum(
+                1 for ln, r in results.items()
+                if ln != "english" and compare_structures(en_sig, r["sig"]) >= 0.8
+            )
+            total = len(results) - 1
+            if matches == total:
+                print(f"\n  >> MATCH: All {total + 1} languages produce the same abstract tree")
+            else:
+                print(f"\n  >> {matches + 1}/{total + 1} languages share the same structure")
         print()
 
     print("=" * 64)
-    print("  Demo complete. Run 'python demo.py' for interactive mode.")
+    print("  * = Beta grammar")
+    print()
+    print("  Languages supported:")
+    for lang_name, info in LANGUAGES.items():
+        print(f"    {info['code']}  {lang_name.capitalize():12s}  [{info['status']}]")
+    print()
+    print("  Same parser engine. Different grammar files.")
+    print("  The abstract tree is the universal intermediary.")
+    print("=" * 64)
+    print("  Run 'python demo.py' for interactive mode.")
     print("=" * 64)
 
 
@@ -488,43 +540,56 @@ def check_visualization_deps():
         print()
 
 
+def print_home_menu():
+    """Print the home menu with all options."""
+    print_banner()
+    check_visualization_deps()
+    print("  Languages:")
+    print("    [1] English              [4] German       (Beta)")
+    print("    [2] Spanish              [5] Portuguese   (Beta)")
+    print("    [3] French     (Beta)    [6] Japanese     (Beta)")
+    print()
+    print("  Tools:")
+    print("    [c] Compare   — Multilingual structural comparison")
+    print("    [a] Run All   — Auto-run all examples across 6 languages")
+    print("    [q] Quit")
+    print()
+
+
 def main():
     if "--all" in sys.argv:
         run_demo_noninteractive()
         return
 
-    print_banner()
-    check_visualization_deps()
-    print("  Modes:")
-    print("    [1] English   — Parse English sentences")
-    print("    [2] Spanish   — Parse Spanish sentences")
-    print("    [3] Compare   — Side-by-side bilingual comparison")
-    print("    [4] Run All   — Auto-run all built-in examples")
-    print("    [q] Quit")
-    print()
+    lang_keys = {
+        "1": "english", "english": "english", "en": "english",
+        "2": "spanish", "spanish": "spanish", "es": "spanish",
+        "3": "french", "french": "french", "fr": "french",
+        "4": "german", "german": "german", "de": "german",
+        "5": "portuguese", "portuguese": "portuguese", "pt": "portuguese",
+        "6": "japanese", "japanese": "japanese", "ja": "japanese",
+    }
 
     while True:
+        print_home_menu()
+
         try:
-            choice = input("  Select mode> ").strip().lower()
+            choice = input("  Select> ").strip().lower()
         except (EOFError, KeyboardInterrupt):
             print("\n  Goodbye!")
             break
 
-        if choice in ("1", "english", "en"):
-            mode_single("english")
-        elif choice in ("2", "spanish", "es"):
-            mode_single("spanish")
-        elif choice in ("3", "compare", "c"):
+        if choice in lang_keys:
+            mode_single(lang_keys[choice])
+        elif choice in ("c", "compare"):
             mode_compare()
-        elif choice in ("4", "all", "a"):
+        elif choice in ("a", "all"):
             run_demo_noninteractive()
         elif choice in ("q", "quit", "exit"):
             print("  Goodbye!")
             break
         else:
-            print("  Invalid choice. Enter 1, 2, 3, 4, or q.")
-
-        print()
+            print("  Invalid choice. Enter 1-6, c, a, or q.")
 
 
 if __name__ == "__main__":

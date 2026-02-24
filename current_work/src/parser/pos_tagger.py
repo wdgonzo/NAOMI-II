@@ -240,6 +240,49 @@ AMBIGUOUS_WORDS = {
 }
 
 
+# Penn Treebank tag → our Tag enum mapping (for NLTK fallback)
+PENN_TO_TAG = {
+    "NN": Tag.NOUN, "NNS": Tag.NOUN, "NNP": Tag.PROPN, "NNPS": Tag.PROPN,
+    "VB": Tag.VERB, "VBD": Tag.VERB, "VBG": Tag.VERB, "VBN": Tag.VERB,
+    "VBP": Tag.VERB, "VBZ": Tag.VERB,
+    "JJ": Tag.ADJ, "JJR": Tag.ADJ, "JJS": Tag.ADJ,
+    "RB": Tag.ADV, "RBR": Tag.ADV, "RBS": Tag.ADV,
+    "PRP": Tag.PRON, "PRP$": Tag.DET, "WP": Tag.PRON, "WP$": Tag.PRON,
+    "DT": Tag.DET, "WDT": Tag.DET,
+    "IN": Tag.ADP, "TO": Tag.PART,
+    "CC": Tag.CCONJ,
+    "MD": Tag.AUX,
+    "CD": Tag.NUM,
+    "RP": Tag.PART,
+    "UH": Tag.X,
+    "EX": Tag.PRON,
+    "FW": Tag.NOUN,
+}
+
+# NLTK tagger lazy initialization
+_nltk_available = None
+
+def _ensure_nltk_tagger():
+    """Lazy-init NLTK tagger data. Returns True if available."""
+    global _nltk_available
+    if _nltk_available is not None:
+        return _nltk_available
+    try:
+        import nltk
+        nltk.data.find('taggers/averaged_perceptron_tagger_eng')
+        _nltk_available = True
+    except LookupError:
+        try:
+            import nltk
+            nltk.download('averaged_perceptron_tagger_eng', quiet=True)
+            _nltk_available = True
+        except Exception:
+            _nltk_available = False
+    except ImportError:
+        _nltk_available = False
+    return _nltk_available
+
+
 # Word → SubType dictionary for morphological features
 WORD_SUBTYPES = {
     # Modal verbs
@@ -720,12 +763,13 @@ def get_possible_tags(word: Word) -> List[Tag]:
     return [word.pos]
 
 
-def simple_tag(text: str) -> Tag:
+def simple_tag(text: str, nltk_hint: str = None) -> Tag:
     """
-    Tag a single word using simple rules.
+    Tag a single word using dictionary lookup, NLTK fallback, then heuristics.
 
     Args:
         text: Word to tag
+        nltk_hint: Optional Penn Treebank tag from NLTK (for unknown words)
 
     Returns:
         POS tag
@@ -756,7 +800,11 @@ def simple_tag(text: str) -> Tag:
     if text_lower in WORD_TAG_DICT:
         return WORD_TAG_DICT[text_lower]
 
-    # Simple heuristics
+    # NLTK fallback for unknown words
+    if nltk_hint and nltk_hint in PENN_TO_TAG:
+        return PENN_TO_TAG[nltk_hint]
+
+    # Heuristic fallbacks (used when NLTK unavailable)
     # Capitalized words (not at start) → Proper noun
     if text[0].isupper() and text not in ["I", "A"]:
         return Tag.PROPN
@@ -782,6 +830,18 @@ def simple_tag(text: str) -> Tag:
     return Tag.NOUN
 
 
+def _get_nltk_tags(tokens: List[str]) -> dict:
+    """Batch-tag tokens via NLTK for context-aware POS tagging."""
+    if not _ensure_nltk_tagger():
+        return {}
+    try:
+        import nltk
+        tagged = nltk.pos_tag(tokens)
+        return {i: penn for i, (_, penn) in enumerate(tagged)}
+    except Exception:
+        return {}
+
+
 def tag_sentence(sentence: str) -> List[Word]:
     """
     Tag an entire sentence.
@@ -793,25 +853,27 @@ def tag_sentence(sentence: str) -> List[Word]:
         List of Word objects with POS tags and subtypes
     """
     # Simple tokenization (split on whitespace)
-    tokens = sentence.split()
+    tokens = [t for t in sentence.split() if t.strip()]
+
+    # Get NLTK tags for the full sentence (context-aware)
+    nltk_tags = _get_nltk_tags(tokens)
 
     words = []
-    for token in tokens:
-        if token.strip():  # Skip empty tokens
-            tag = simple_tag(token)
+    for i, token in enumerate(tokens):
+        tag = simple_tag(token, nltk_hint=nltk_tags.get(i))
 
-            # Look up subtypes from dictionary
-            subtypes = WORD_SUBTYPES.get(token.lower(), []).copy()
+        # Look up subtypes from dictionary
+        subtypes = WORD_SUBTYPES.get(token.lower(), []).copy()
 
-            # Add suffix-based subtypes
-            token_lower = token.lower()
+        # Add suffix-based subtypes
+        token_lower = token.lower()
 
-            # -ing suffix → PARTICIPLE (for present participles)
-            if token_lower.endswith("ing") and tag == Tag.VERB:
-                if SubType.PARTICIPLE not in subtypes:
-                    subtypes.append(SubType.PARTICIPLE)
+        # -ing suffix → PARTICIPLE (for present participles)
+        if token_lower.endswith("ing") and tag == Tag.VERB:
+            if SubType.PARTICIPLE not in subtypes:
+                subtypes.append(SubType.PARTICIPLE)
 
-            words.append(Word(token, tag, subtypes))
+        words.append(Word(token, tag, subtypes))
 
     return words
 
@@ -826,9 +888,12 @@ def tag_words(text_list: List[str]) -> List[Word]:
     Returns:
         List of Word objects with POS tags and subtypes
     """
+    # Get NLTK tags for context
+    nltk_tags = _get_nltk_tags(text_list)
+
     words = []
-    for text in text_list:
-        tag = simple_tag(text)
+    for i, text in enumerate(text_list):
+        tag = simple_tag(text, nltk_hint=nltk_tags.get(i))
         subtypes = WORD_SUBTYPES.get(text.lower(), []).copy()
 
         # Add suffix-based subtypes
@@ -1005,3 +1070,493 @@ try:
 except ImportError:
     # spaCy not available, use simple tagger
     pass
+
+
+# ========== FRENCH TAGGING FUNCTIONS ==========
+
+FRENCH_WORD_TAG_DICT = {
+    # Determiners (articles)
+    "le": Tag.DET, "la": Tag.DET, "les": Tag.DET,
+    "un": Tag.DET, "une": Tag.DET, "des": Tag.DET,
+    "ce": Tag.DET, "cette": Tag.DET, "ces": Tag.DET,
+    "mon": Tag.DET, "ma": Tag.DET, "mes": Tag.DET,
+    "ton": Tag.DET, "ta": Tag.DET, "tes": Tag.DET,
+    "son": Tag.DET, "sa": Tag.DET, "ses": Tag.DET,
+
+    # Common nouns
+    "chien": Tag.NOUN, "chiens": Tag.NOUN, "chat": Tag.NOUN, "chats": Tag.NOUN,
+    "maison": Tag.NOUN, "maisons": Tag.NOUN, "homme": Tag.NOUN, "femme": Tag.NOUN,
+    "livre": Tag.NOUN, "table": Tag.NOUN, "eau": Tag.NOUN, "jour": Tag.NOUN,
+    "nuit": Tag.NOUN, "enfant": Tag.NOUN, "enfants": Tag.NOUN,
+
+    # Adjectives
+    "grand": Tag.ADJ, "grande": Tag.ADJ, "grands": Tag.ADJ, "grandes": Tag.ADJ,
+    "petit": Tag.ADJ, "petite": Tag.ADJ, "petits": Tag.ADJ, "petites": Tag.ADJ,
+    "blanc": Tag.ADJ, "blanche": Tag.ADJ, "blancs": Tag.ADJ, "blanches": Tag.ADJ,
+    "noir": Tag.ADJ, "noire": Tag.ADJ, "noirs": Tag.ADJ, "noires": Tag.ADJ,
+    "rouge": Tag.ADJ, "rouges": Tag.ADJ,
+    "bleu": Tag.ADJ, "bleue": Tag.ADJ, "bleus": Tag.ADJ, "bleues": Tag.ADJ,
+    "bon": Tag.ADJ, "bonne": Tag.ADJ, "bons": Tag.ADJ, "bonnes": Tag.ADJ,
+    "beau": Tag.ADJ, "belle": Tag.ADJ, "beaux": Tag.ADJ, "belles": Tag.ADJ,
+    "nouveau": Tag.ADJ, "nouvelle": Tag.ADJ, "nouveaux": Tag.ADJ, "nouvelles": Tag.ADJ,
+    "vieux": Tag.ADJ, "vieille": Tag.ADJ,
+
+    # Verbs
+    "court": Tag.VERB, "courir": Tag.VERB,
+    "mange": Tag.VERB, "manger": Tag.VERB,
+    "poursuit": Tag.VERB, "poursuivre": Tag.VERB,
+    "voit": Tag.VERB, "voir": Tag.VERB,
+    "parle": Tag.VERB, "parler": Tag.VERB,
+    "aime": Tag.VERB, "aimer": Tag.VERB,
+    "est": Tag.AUX, "sont": Tag.AUX, "suis": Tag.AUX,
+    "a": Tag.AUX, "ont": Tag.AUX, "ai": Tag.AUX,
+
+    # Adverbs
+    "vite": Tag.ADV, "bien": Tag.ADV, "mal": Tag.ADV,
+    "très": Tag.ADV, "aussi": Tag.ADV, "toujours": Tag.ADV,
+    "jamais": Tag.ADV, "ici": Tag.ADV, "là": Tag.ADV,
+
+    # Prepositions
+    "de": Tag.ADP, "du": Tag.ADP, "dans": Tag.ADP, "sur": Tag.ADP,
+    "sous": Tag.ADP, "avec": Tag.ADP, "pour": Tag.ADP, "par": Tag.ADP,
+    "en": Tag.ADP, "entre": Tag.ADP,
+
+    # Conjunctions
+    "et": Tag.CCONJ, "ou": Tag.CCONJ, "mais": Tag.CCONJ,
+
+    # Pronouns
+    "je": Tag.PRON, "tu": Tag.PRON, "il": Tag.PRON, "elle": Tag.PRON,
+    "nous": Tag.PRON, "vous": Tag.PRON, "ils": Tag.PRON, "elles": Tag.PRON,
+    "me": Tag.PRON, "te": Tag.PRON, "se": Tag.PRON,
+}
+
+FRENCH_WORD_SUBTYPES = {
+    # Determiners with gender/number
+    "le": [SubType.MASCULINE, SubType.SINGULAR],
+    "la": [SubType.FEMININE, SubType.SINGULAR],
+    "les": [SubType.PLURAL],
+    "un": [SubType.MASCULINE, SubType.SINGULAR],
+    "une": [SubType.FEMININE, SubType.SINGULAR],
+    "des": [SubType.PLURAL],
+
+    # Nouns with gender/number
+    "chien": [SubType.MASCULINE, SubType.SINGULAR],
+    "chiens": [SubType.MASCULINE, SubType.PLURAL],
+    "chat": [SubType.MASCULINE, SubType.SINGULAR],
+    "chats": [SubType.MASCULINE, SubType.PLURAL],
+    "maison": [SubType.FEMININE, SubType.SINGULAR],
+    "maisons": [SubType.FEMININE, SubType.PLURAL],
+    "homme": [SubType.MASCULINE, SubType.SINGULAR],
+    "femme": [SubType.FEMININE, SubType.SINGULAR],
+    "livre": [SubType.MASCULINE, SubType.SINGULAR],
+    "table": [SubType.FEMININE, SubType.SINGULAR],
+    "enfant": [SubType.MASCULINE, SubType.SINGULAR],
+    "enfants": [SubType.MASCULINE, SubType.PLURAL],
+
+    # Adjectives with gender/number/position
+    # POST_NOMINAL (default French pattern)
+    "blanc": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "blanche": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "blancs": [SubType.MASCULINE, SubType.PLURAL, SubType.POST_NOMINAL],
+    "blanches": [SubType.FEMININE, SubType.PLURAL, SubType.POST_NOMINAL],
+    "noir": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "noire": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "rouge": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "rouges": [SubType.MASCULINE, SubType.PLURAL, SubType.POST_NOMINAL],
+    "bleu": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "bleue": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    # PRE_NOMINAL (BAGS adjectives: beauty, age, goodness, size)
+    "grand": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "grande": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "grands": [SubType.MASCULINE, SubType.PLURAL, SubType.PRE_NOMINAL],
+    "grandes": [SubType.FEMININE, SubType.PLURAL, SubType.PRE_NOMINAL],
+    "petit": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "petite": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "petits": [SubType.MASCULINE, SubType.PLURAL, SubType.PRE_NOMINAL],
+    "petites": [SubType.FEMININE, SubType.PLURAL, SubType.PRE_NOMINAL],
+    "bon": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "bonne": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "beau": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "belle": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "nouveau": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "nouvelle": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "vieux": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "vieille": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+
+    # Verbs with person/number
+    "court": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "poursuit": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "mange": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "voit": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "parle": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "aime": [SubType.THIRD_PERSON, SubType.SINGULAR],
+}
+
+
+def simple_tag_french(text: str) -> Tag:
+    """Tag a single French word."""
+    text_lower = text.lower()
+    if text_lower in FRENCH_WORD_TAG_DICT:
+        return FRENCH_WORD_TAG_DICT[text_lower]
+    if text[0].isupper():
+        return Tag.PROPN
+    if text_lower.endswith("ment"):
+        return Tag.ADV
+    if text_lower.endswith(("er", "ir", "re")):
+        return Tag.VERB
+    if text_lower.endswith(("tion", "sion")):
+        return Tag.NOUN
+    return Tag.NOUN
+
+
+def tag_french_sentence(sentence: str) -> List[Word]:
+    """Tag a French sentence."""
+    tokens = [t for t in sentence.split() if t.strip()]
+    words = []
+    for token in tokens:
+        tag = simple_tag_french(token)
+        subtypes = FRENCH_WORD_SUBTYPES.get(token.lower(), []).copy()
+        words.append(Word(token, tag, subtypes))
+    return words
+
+
+# ========== GERMAN TAGGING FUNCTIONS ==========
+
+GERMAN_WORD_TAG_DICT = {
+    # Determiners (articles)
+    "der": Tag.DET, "die": Tag.DET, "das": Tag.DET,
+    "den": Tag.DET, "dem": Tag.DET, "des": Tag.DET,
+    "ein": Tag.DET, "eine": Tag.DET, "einen": Tag.DET,
+    "einem": Tag.DET, "einer": Tag.DET, "eines": Tag.DET,
+    "mein": Tag.DET, "meine": Tag.DET, "dein": Tag.DET, "deine": Tag.DET,
+
+    # Common nouns (German nouns are capitalized)
+    "hund": Tag.NOUN, "hunde": Tag.NOUN, "katze": Tag.NOUN, "katzen": Tag.NOUN,
+    "haus": Tag.NOUN, "mann": Tag.NOUN, "frau": Tag.NOUN,
+    "kind": Tag.NOUN, "kinder": Tag.NOUN, "buch": Tag.NOUN,
+    "tisch": Tag.NOUN, "wasser": Tag.NOUN, "tag": Tag.NOUN,
+
+    # Adjectives
+    "grosse": Tag.ADJ, "grosser": Tag.ADJ, "grosses": Tag.ADJ,
+    "kleine": Tag.ADJ, "kleiner": Tag.ADJ, "kleines": Tag.ADJ,
+    "weisse": Tag.ADJ, "weisser": Tag.ADJ, "weisses": Tag.ADJ,
+    "schwarze": Tag.ADJ, "rote": Tag.ADJ, "blaue": Tag.ADJ,
+    "gute": Tag.ADJ, "guter": Tag.ADJ, "gutes": Tag.ADJ,
+    "alte": Tag.ADJ, "alter": Tag.ADJ, "altes": Tag.ADJ,
+    "neue": Tag.ADJ, "neuer": Tag.ADJ, "neues": Tag.ADJ,
+    "schone": Tag.ADJ, "schnelle": Tag.ADJ,
+
+    # Verbs
+    "rennt": Tag.VERB, "rennen": Tag.VERB,
+    "jagt": Tag.VERB, "jagen": Tag.VERB,
+    "lauft": Tag.VERB, "laufen": Tag.VERB,
+    "sieht": Tag.VERB, "sehen": Tag.VERB,
+    "isst": Tag.VERB, "essen": Tag.VERB,
+    "spricht": Tag.VERB, "sprechen": Tag.VERB,
+    "liebt": Tag.VERB, "lieben": Tag.VERB,
+    "ist": Tag.AUX, "sind": Tag.AUX, "bin": Tag.AUX,
+    "hat": Tag.AUX, "haben": Tag.AUX,
+
+    # Adverbs
+    "schnell": Tag.ADV, "langsam": Tag.ADV, "sehr": Tag.ADV,
+    "gut": Tag.ADV, "hier": Tag.ADV, "dort": Tag.ADV,
+    "immer": Tag.ADV, "nie": Tag.ADV, "oft": Tag.ADV,
+
+    # Prepositions
+    "in": Tag.ADP, "auf": Tag.ADP, "an": Tag.ADP, "mit": Tag.ADP,
+    "von": Tag.ADP, "zu": Tag.ADP, "nach": Tag.ADP, "bei": Tag.ADP,
+    "fur": Tag.ADP, "uber": Tag.ADP, "unter": Tag.ADP,
+
+    # Conjunctions
+    "und": Tag.CCONJ, "oder": Tag.CCONJ, "aber": Tag.CCONJ,
+
+    # Pronouns
+    "ich": Tag.PRON, "du": Tag.PRON, "er": Tag.PRON, "sie": Tag.PRON,
+    "es": Tag.PRON, "wir": Tag.PRON, "ihr": Tag.PRON,
+    "mich": Tag.PRON, "dich": Tag.PRON, "sich": Tag.PRON,
+}
+
+GERMAN_WORD_SUBTYPES = {
+    # Determiners with gender/number
+    "der": [SubType.MASCULINE, SubType.SINGULAR],
+    "die": [SubType.FEMININE, SubType.SINGULAR],
+    "das": [SubType.NEUTER, SubType.SINGULAR],
+    "den": [SubType.MASCULINE, SubType.SINGULAR],
+    "dem": [SubType.MASCULINE, SubType.SINGULAR],
+    "ein": [SubType.MASCULINE, SubType.SINGULAR],
+    "eine": [SubType.FEMININE, SubType.SINGULAR],
+
+    # Nouns with gender/number
+    "hund": [SubType.MASCULINE, SubType.SINGULAR],
+    "hunde": [SubType.MASCULINE, SubType.PLURAL],
+    "katze": [SubType.FEMININE, SubType.SINGULAR],
+    "katzen": [SubType.FEMININE, SubType.PLURAL],
+    "haus": [SubType.NEUTER, SubType.SINGULAR],
+    "mann": [SubType.MASCULINE, SubType.SINGULAR],
+    "frau": [SubType.FEMININE, SubType.SINGULAR],
+    "kind": [SubType.NEUTER, SubType.SINGULAR],
+    "kinder": [SubType.NEUTER, SubType.PLURAL],
+    "buch": [SubType.NEUTER, SubType.SINGULAR],
+
+    # Adjectives with gender/number (PRE_NOMINAL in German)
+    "grosse": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "grosser": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "grosses": [SubType.NEUTER, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "kleine": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "kleiner": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "kleines": [SubType.NEUTER, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "weisse": [SubType.NEUTER, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "weisser": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "weisses": [SubType.NEUTER, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "gute": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "guter": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "gutes": [SubType.NEUTER, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "schnelle": [SubType.FEMININE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+
+    # Verbs with person/number
+    "rennt": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "jagt": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "lauft": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "sieht": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "isst": [SubType.THIRD_PERSON, SubType.SINGULAR],
+}
+
+
+def simple_tag_german(text: str) -> Tag:
+    """Tag a single German word."""
+    text_lower = text.lower()
+    if text_lower in GERMAN_WORD_TAG_DICT:
+        return GERMAN_WORD_TAG_DICT[text_lower]
+    # German nouns are capitalized (but skip sentence-initial position heuristic)
+    if text[0].isupper() and len(text) > 1:
+        return Tag.NOUN
+    if text_lower.endswith("lich") or text_lower.endswith("ig") or text_lower.endswith("isch"):
+        return Tag.ADJ
+    if text_lower.endswith("en"):
+        return Tag.VERB
+    if text_lower.endswith(("ung", "heit", "keit")):
+        return Tag.NOUN
+    return Tag.NOUN
+
+
+def tag_german_sentence(sentence: str) -> List[Word]:
+    """Tag a German sentence."""
+    tokens = [t for t in sentence.split() if t.strip()]
+    words = []
+    for token in tokens:
+        tag = simple_tag_german(token)
+        subtypes = GERMAN_WORD_SUBTYPES.get(token.lower(), []).copy()
+        words.append(Word(token, tag, subtypes))
+    return words
+
+
+# ========== PORTUGUESE TAGGING FUNCTIONS ==========
+
+PORTUGUESE_WORD_TAG_DICT = {
+    # Determiners (articles)
+    "o": Tag.DET, "a": Tag.DET, "os": Tag.DET, "as": Tag.DET,
+    "um": Tag.DET, "uma": Tag.DET, "uns": Tag.DET, "umas": Tag.DET,
+    "este": Tag.DET, "esta": Tag.DET, "estes": Tag.DET, "estas": Tag.DET,
+    "meu": Tag.DET, "minha": Tag.DET, "seu": Tag.DET, "sua": Tag.DET,
+
+    # Common nouns
+    "cachorro": Tag.NOUN, "cachorros": Tag.NOUN, "gato": Tag.NOUN, "gatos": Tag.NOUN,
+    "casa": Tag.NOUN, "casas": Tag.NOUN, "homem": Tag.NOUN, "mulher": Tag.NOUN,
+    "livro": Tag.NOUN, "mesa": Tag.NOUN, "agua": Tag.NOUN, "dia": Tag.NOUN,
+
+    # Adjectives
+    "grande": Tag.ADJ, "grandes": Tag.ADJ,
+    "pequeno": Tag.ADJ, "pequena": Tag.ADJ, "pequenos": Tag.ADJ, "pequenas": Tag.ADJ,
+    "branco": Tag.ADJ, "branca": Tag.ADJ, "brancos": Tag.ADJ, "brancas": Tag.ADJ,
+    "preto": Tag.ADJ, "preta": Tag.ADJ,
+    "vermelho": Tag.ADJ, "vermelha": Tag.ADJ,
+    "azul": Tag.ADJ, "azuis": Tag.ADJ,
+    "bom": Tag.ADJ, "boa": Tag.ADJ,
+    "bonito": Tag.ADJ, "bonita": Tag.ADJ,
+    "velho": Tag.ADJ, "velha": Tag.ADJ,
+    "novo": Tag.ADJ, "nova": Tag.ADJ,
+
+    # Verbs
+    "corre": Tag.VERB, "correr": Tag.VERB,
+    "come": Tag.VERB, "comer": Tag.VERB,
+    "persegue": Tag.VERB, "perseguir": Tag.VERB,
+    "fala": Tag.VERB, "falar": Tag.VERB,
+    "ama": Tag.VERB, "amar": Tag.VERB,
+    "ve": Tag.VERB, "ver": Tag.VERB,
+    "e": Tag.AUX, "sao": Tag.AUX, "sou": Tag.AUX,
+    "tem": Tag.AUX, "tenho": Tag.AUX,
+    "esta": Tag.AUX, "estou": Tag.AUX,
+
+    # Adverbs
+    "rapidamente": Tag.ADV, "bem": Tag.ADV, "mal": Tag.ADV,
+    "muito": Tag.ADV, "sempre": Tag.ADV, "nunca": Tag.ADV,
+    "aqui": Tag.ADV, "ali": Tag.ADV,
+
+    # Prepositions
+    "de": Tag.ADP, "em": Tag.ADP, "com": Tag.ADP, "por": Tag.ADP,
+    "para": Tag.ADP, "sem": Tag.ADP, "sobre": Tag.ADP,
+
+    # Conjunctions
+    "e": Tag.CCONJ, "ou": Tag.CCONJ, "mas": Tag.CCONJ,
+
+    # Pronouns
+    "eu": Tag.PRON, "tu": Tag.PRON, "ele": Tag.PRON, "ela": Tag.PRON,
+    "nos": Tag.PRON, "vos": Tag.PRON, "eles": Tag.PRON, "elas": Tag.PRON,
+}
+
+PORTUGUESE_WORD_SUBTYPES = {
+    # Determiners with gender/number
+    "o": [SubType.MASCULINE, SubType.SINGULAR],
+    "a": [SubType.FEMININE, SubType.SINGULAR],
+    "os": [SubType.MASCULINE, SubType.PLURAL],
+    "as": [SubType.FEMININE, SubType.PLURAL],
+    "um": [SubType.MASCULINE, SubType.SINGULAR],
+    "uma": [SubType.FEMININE, SubType.SINGULAR],
+
+    # Nouns with gender/number
+    "cachorro": [SubType.MASCULINE, SubType.SINGULAR],
+    "cachorros": [SubType.MASCULINE, SubType.PLURAL],
+    "gato": [SubType.MASCULINE, SubType.SINGULAR],
+    "gatos": [SubType.MASCULINE, SubType.PLURAL],
+    "casa": [SubType.FEMININE, SubType.SINGULAR],
+    "casas": [SubType.FEMININE, SubType.PLURAL],
+    "homem": [SubType.MASCULINE, SubType.SINGULAR],
+    "mulher": [SubType.FEMININE, SubType.SINGULAR],
+    "livro": [SubType.MASCULINE, SubType.SINGULAR],
+    "mesa": [SubType.FEMININE, SubType.SINGULAR],
+
+    # Adjectives with gender/number/position
+    "branco": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "branca": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "brancos": [SubType.MASCULINE, SubType.PLURAL, SubType.POST_NOMINAL],
+    "brancas": [SubType.FEMININE, SubType.PLURAL, SubType.POST_NOMINAL],
+    "preto": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "preta": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "vermelho": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "vermelha": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "bonito": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "bonita": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "velho": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "velha": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "novo": [SubType.MASCULINE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    "nova": [SubType.FEMININE, SubType.SINGULAR, SubType.POST_NOMINAL],
+    # PRE_NOMINAL (grande comes before noun in Portuguese too)
+    "grande": [SubType.MASCULINE, SubType.SINGULAR, SubType.PRE_NOMINAL],
+    "grandes": [SubType.MASCULINE, SubType.PLURAL, SubType.PRE_NOMINAL],
+
+    # Verbs with person/number
+    "corre": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "persegue": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "come": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "fala": [SubType.THIRD_PERSON, SubType.SINGULAR],
+    "ama": [SubType.THIRD_PERSON, SubType.SINGULAR],
+}
+
+
+def simple_tag_portuguese(text: str) -> Tag:
+    """Tag a single Portuguese word."""
+    text_lower = text.lower()
+    if text_lower in PORTUGUESE_WORD_TAG_DICT:
+        return PORTUGUESE_WORD_TAG_DICT[text_lower]
+    if text[0].isupper():
+        return Tag.PROPN
+    if text_lower.endswith("mente"):
+        return Tag.ADV
+    if text_lower.endswith(("ar", "er", "ir")):
+        return Tag.VERB
+    if text_lower.endswith(("ando", "endo", "indo")):
+        return Tag.VERB
+    if text_lower.endswith(("cao", "dade")):
+        return Tag.NOUN
+    return Tag.NOUN
+
+
+def tag_portuguese_sentence(sentence: str) -> List[Word]:
+    """Tag a Portuguese sentence."""
+    tokens = [t for t in sentence.split() if t.strip()]
+    words = []
+    for token in tokens:
+        tag = simple_tag_portuguese(token)
+        subtypes = PORTUGUESE_WORD_SUBTYPES.get(token.lower(), []).copy()
+        words.append(Word(token, tag, subtypes))
+    return words
+
+
+# ========== JAPANESE TAGGING FUNCTIONS (ROMAJI) ==========
+
+JAPANESE_WORD_TAG_DICT = {
+    # Nouns
+    "inu": Tag.NOUN, "neko": Tag.NOUN, "ie": Tag.NOUN, "hito": Tag.NOUN,
+    "kodomo": Tag.NOUN, "otoko": Tag.NOUN, "onna": Tag.NOUN,
+    "hon": Tag.NOUN, "mizu": Tag.NOUN, "ki": Tag.NOUN,
+    "sakana": Tag.NOUN, "tori": Tag.NOUN, "yama": Tag.NOUN,
+    "kawa": Tag.NOUN, "umi": Tag.NOUN, "sora": Tag.NOUN,
+
+    # Adjectives (i-adjectives)
+    "shiroi": Tag.ADJ, "kuroi": Tag.ADJ, "akai": Tag.ADJ, "aoi": Tag.ADJ,
+    "ooki": Tag.ADJ, "chiisai": Tag.ADJ, "atarashii": Tag.ADJ, "furui": Tag.ADJ,
+    "ii": Tag.ADJ, "warui": Tag.ADJ, "takai": Tag.ADJ, "hikui": Tag.ADJ,
+    "hayai": Tag.ADJ, "osoi": Tag.ADJ, "nagai": Tag.ADJ, "mijikai": Tag.ADJ,
+    "utsukushii": Tag.ADJ, "kitanai": Tag.ADJ,
+
+    # Verbs (dictionary form / masu-stem)
+    "hashiru": Tag.VERB, "hashiri": Tag.VERB,
+    "taberu": Tag.VERB, "tabe": Tag.VERB,
+    "ou": Tag.VERB, "oi": Tag.VERB,
+    "miru": Tag.VERB, "mi": Tag.VERB,
+    "hanasu": Tag.VERB, "hanashi": Tag.VERB,
+    "yomu": Tag.VERB, "yomi": Tag.VERB,
+    "kaku": Tag.VERB, "kaki": Tag.VERB,
+    "nomu": Tag.VERB, "nomi": Tag.VERB,
+    "iku": Tag.VERB, "iki": Tag.VERB,
+    "kuru": Tag.VERB, "ki": Tag.VERB,
+    "suru": Tag.VERB, "shi": Tag.VERB,
+    "aru": Tag.VERB, "nai": Tag.VERB,
+    "iru": Tag.VERB,
+    "da": Tag.AUX, "desu": Tag.AUX,
+
+    # Adverbs
+    "hayaku": Tag.ADV, "yukkuri": Tag.ADV, "totemo": Tag.ADV,
+    "yoku": Tag.ADV, "motto": Tag.ADV, "mada": Tag.ADV,
+    "mo": Tag.ADV, "itsumo": Tag.ADV,
+
+    # Particles (tagged as ADP → NodeType.PREP)
+    "ga": Tag.ADP, "wo": Tag.ADP, "wa": Tag.ADP,
+    "ni": Tag.ADP, "de": Tag.ADP, "e": Tag.ADP,
+    "no": Tag.ADP, "ka": Tag.ADP, "mo": Tag.ADP,
+    "kara": Tag.ADP, "made": Tag.ADP,
+
+    # Conjunction particle
+    "to": Tag.CCONJ,
+
+    # Pronouns
+    "watashi": Tag.PRON, "anata": Tag.PRON, "kare": Tag.PRON, "kanojo": Tag.PRON,
+    "watashitachi": Tag.PRON, "karera": Tag.PRON,
+}
+
+JAPANESE_WORD_SUBTYPES = {}  # Japanese has no gender/number agreement
+
+
+def simple_tag_japanese(text: str) -> Tag:
+    """Tag a single Japanese word (romaji)."""
+    text_lower = text.lower()
+    if text_lower in JAPANESE_WORD_TAG_DICT:
+        return JAPANESE_WORD_TAG_DICT[text_lower]
+    # Japanese i-adjectives end in -i (but not all -i words are adjectives)
+    if text_lower.endswith("i") and len(text_lower) > 2:
+        return Tag.ADJ
+    # Verbs in dictionary form often end in -u
+    if text_lower.endswith("u") and len(text_lower) > 2:
+        return Tag.VERB
+    return Tag.NOUN
+
+
+def tag_japanese_sentence(sentence: str) -> List[Word]:
+    """Tag a Japanese sentence (romanized/romaji)."""
+    tokens = [t for t in sentence.split() if t.strip()]
+    words = []
+    for token in tokens:
+        tag = simple_tag_japanese(token)
+        subtypes = JAPANESE_WORD_SUBTYPES.get(token.lower(), []).copy()
+        words.append(Word(token, tag, subtypes))
+    return words

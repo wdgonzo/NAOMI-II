@@ -1,0 +1,473 @@
+{
+    "metadata": {
+        "language": "french",
+        "version": "0.1-beta",
+        "author": "NAOMI-II",
+        "description": "Beta French grammar with gender/number agreement and post-nominal adjectives"
+    },
+
+    "order": [
+        "adv1",
+        "adj2", "adj1",
+        "nominal1", "nominal2",
+        "verb1",
+        "predicate1",
+        "clause1", "clause2"
+    ],
+
+    "rulesets": {
+        "adv1": {
+            "description": "Adverb modification (tres vite)",
+            "result": "SPECIFIER",
+            "rules": [
+                {
+                    "result": "SPECIFIER",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {
+                            "type": "SPECIFIER"
+                        },
+                        "before": [
+                            {
+                                "type": "SPECIFIER",
+                                "quantifier": "one"
+                            }
+                        ],
+                        "after": []
+                    },
+                    "connections": [
+                        {
+                            "type": "SPECIFICATION",
+                            "from": "before[0]",
+                            "to": "anchor"
+                        }
+                    ],
+                    "consume": ["before"],
+                    "note": "Example: tres vite (very quickly)"
+                }
+            ]
+        },
+
+        "adj1": {
+            "description": "Attach determiner to noun with gender/number agreement (le chien, la maison)",
+            "result": "NOUN",
+            "rules": [
+                {
+                    "result": "NOUN",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "NOUN"
+                        },
+                        "before": [
+                            {
+                                "type": "DESCRIPTOR",
+                                "quantifier": "one",
+                                "agreement": {
+                                    "GENDER": "anchor.GENDER",
+                                    "NUMBER": "anchor.NUMBER"
+                                }
+                            }
+                        ],
+                        "after": []
+                    },
+                    "connections": [
+                        {
+                            "type": "DESCRIPTION",
+                            "from": "before[0]",
+                            "to": "anchor"
+                        }
+                    ],
+                    "consume": ["before"],
+                    "note": "Example: le chien (the dog) - gender/number must agree"
+                }
+            ]
+        },
+
+        "adj2": {
+            "description": "Attach POST-NOMINAL and PRE-NOMINAL adjectives with gender/number agreement (maison blanche, grand chien)",
+            "result": "NOUN",
+            "rules": [
+                {
+                    "result": "NOUN",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {
+                            "type": "NOUN"
+                        },
+                        "before": [],
+                        "after": [
+                            {
+                                "type": "DESCRIPTOR",
+                                "quantifier": "all",
+                                "subtypes": ["POST_NOMINAL"],
+                                "agreement": {
+                                    "GENDER": "anchor.GENDER",
+                                    "NUMBER": "anchor.NUMBER"
+                                }
+                            }
+                        ]
+                    },
+                    "connections": [
+                        {
+                            "type": "DESCRIPTION",
+                            "from": "after[*]",
+                            "to": "anchor"
+                        }
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: maison blanche (white house) - adjective AFTER noun with gender/number agreement"
+                },
+                {
+                    "result": "NOUN",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {
+                            "type": "NOUN"
+                        },
+                        "before": [
+                            {
+                                "type": "DESCRIPTOR",
+                                "quantifier": "all",
+                                "subtypes": ["PRE_NOMINAL"],
+                                "agreement": {
+                                    "GENDER": "anchor.GENDER",
+                                    "NUMBER": "anchor.NUMBER"
+                                }
+                            }
+                        ],
+                        "after": []
+                    },
+                    "connections": [
+                        {
+                            "type": "DESCRIPTION",
+                            "from": "before[*]",
+                            "to": "anchor"
+                        }
+                    ],
+                    "consume": ["before"],
+                    "note": "Example: grand chien (big dog) - some French adjectives go BEFORE noun (BAGS adjectives: beauty, age, goodness, size)"
+                }
+            ]
+        },
+
+        "nominal1": {
+            "description": "Convert noun to nominal",
+            "result": "NOMINAL",
+            "rules": [
+                {
+                    "result": "NOMINAL",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "NOUN"
+                        },
+                        "before": [],
+                        "after": []
+                    },
+                    "connections": [],
+                    "consume": [],
+                    "note": "Simple noun to nominal conversion"
+                }
+            ]
+        },
+
+        "nominal2": {
+            "description": "Coordinate nominals (chiens et chats)",
+            "result": "NOMINAL",
+            "rules": [
+                {
+                    "result": "NOMINAL",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "COORD"
+                        },
+                        "before": [],
+                        "after": [
+                            {
+                                "type": "COORD",
+                                "quantifier": "one",
+                                "check_original": true
+                            }
+                        ]
+                    },
+                    "connections": [],
+                    "consume": ["after"],
+                    "note": "Consume duplicate COORD"
+                },
+                {
+                    "result": "NOMINAL",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {
+                            "type": "COORD"
+                        },
+                        "before": [
+                            {
+                                "type": "NOMINAL",
+                                "quantifier": "all"
+                            }
+                        ],
+                        "after": [
+                            {
+                                "type": "NOMINAL",
+                                "quantifier": "one"
+                            }
+                        ]
+                    },
+                    "connections": [
+                        {
+                            "type": "COORDINATION",
+                            "from": "before[*]",
+                            "to": "anchor"
+                        },
+                        {
+                            "type": "COORDINATION",
+                            "from": "after[0]",
+                            "to": "anchor"
+                        }
+                    ],
+                    "consume": ["before", "after"],
+                    "note": "Example: le chien et le chat (the dog and the cat)"
+                }
+            ]
+        },
+
+        "verb1": {
+            "description": "Build verbal phrases with adverb modifiers (court vite)",
+            "result": "VERBAL",
+            "rules": [
+                {
+                    "result": "VERBAL",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {
+                            "type": "VERBAL"
+                        },
+                        "before": [],
+                        "after": [
+                            {
+                                "type": "SPECIFIER",
+                                "quantifier": "one"
+                            }
+                        ]
+                    },
+                    "connections": [
+                        {
+                            "type": "SPECIFICATION",
+                            "from": "after[0]",
+                            "to": "anchor"
+                        }
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: court vite (runs quickly) - adverb after verb"
+                },
+                {
+                    "result": "VERBAL",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {
+                            "type": "VERBAL"
+                        },
+                        "before": [
+                            {
+                                "type": "SPECIFIER",
+                                "quantifier": "one"
+                            }
+                        ],
+                        "after": []
+                    },
+                    "connections": [
+                        {
+                            "type": "SPECIFICATION",
+                            "from": "before[0]",
+                            "to": "anchor"
+                        }
+                    ],
+                    "consume": ["before"],
+                    "note": "Example: vite court (quickly runs) - adverb before verb"
+                }
+            ]
+        },
+
+        "predicate1": {
+            "description": "Build predicates from verbal + arguments",
+            "result": "PREDICATE",
+            "rules": [
+                {
+                    "result": "PREDICATE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "VERBAL"
+                        },
+                        "before": [],
+                        "after": []
+                    },
+                    "connections": [],
+                    "consume": [],
+                    "note": "Intransitive verb becomes predicate"
+                },
+                {
+                    "result": "PREDICATE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "VERBAL"
+                        },
+                        "before": [],
+                        "after": [
+                            {
+                                "type": "NOMINAL",
+                                "quantifier": "one"
+                            }
+                        ]
+                    },
+                    "connections": [
+                        {
+                            "type": "OBJECT",
+                            "from": "anchor",
+                            "to": "after[0]"
+                        }
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: poursuit le chat (chases the cat - transitive)"
+                },
+                {
+                    "result": "PREDICATE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "VERBAL"
+                        },
+                        "before": [],
+                        "after": [
+                            {
+                                "type": "DESCRIPTOR",
+                                "quantifier": "one"
+                            }
+                        ]
+                    },
+                    "connections": [
+                        {
+                            "type": "COMPLEMENT",
+                            "from": "anchor",
+                            "to": "after[0]"
+                        }
+                    ],
+                    "consume": ["after"],
+                    "note": "Example: est heureux (is happy - copula)"
+                }
+            ]
+        },
+
+        "clause1": {
+            "description": "Build clauses from subject + predicate (le chien court)",
+            "result": "CLAUSE",
+            "rules": [
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "PREDICATE"
+                        },
+                        "before": [
+                            {
+                                "type": "NOMINAL",
+                                "quantifier": "one"
+                            }
+                        ],
+                        "after": []
+                    },
+                    "connections": [
+                        {
+                            "type": "SUBJECT",
+                            "from": "anchor",
+                            "to": "before[0]"
+                        }
+                    ],
+                    "consume": ["before"],
+                    "note": "Example: le chien court (the dog runs)"
+                },
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "PREDICATE"
+                        },
+                        "before": [],
+                        "after": []
+                    },
+                    "connections": [],
+                    "consume": [],
+                    "note": "Imperative: bare predicate becomes clause (e.g., cours! - run!)"
+                }
+            ]
+        },
+
+        "clause2": {
+            "description": "Coordinate clauses (le chien court et le chat dort)",
+            "result": "CLAUSE",
+            "rules": [
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "COORD"
+                        },
+                        "before": [],
+                        "after": [
+                            {
+                                "type": "COORD",
+                                "quantifier": "one",
+                                "check_original": true
+                            }
+                        ]
+                    },
+                    "connections": [],
+                    "consume": ["after"],
+                    "note": "Consume duplicate COORD"
+                },
+                {
+                    "result": "CLAUSE",
+                    "recursive": true,
+                    "pattern": {
+                        "anchor": {
+                            "type": "COORD"
+                        },
+                        "before": [
+                            {
+                                "type": "CLAUSE",
+                                "quantifier": "all"
+                            }
+                        ],
+                        "after": [
+                            {
+                                "type": "CLAUSE",
+                                "quantifier": "one"
+                            }
+                        ]
+                    },
+                    "connections": [
+                        {
+                            "type": "COORDINATION",
+                            "from": "before[*]",
+                            "to": "anchor"
+                        },
+                        {
+                            "type": "COORDINATION",
+                            "from": "after[0]",
+                            "to": "anchor"
+                        }
+                    ],
+                    "consume": ["before", "after"],
+                    "note": "Example: le chien court et le chat dort (the dog runs and the cat sleeps)"
+                }
+            ]
+        }
+    }
+}

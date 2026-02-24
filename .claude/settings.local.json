@@ -17,7 +17,8 @@
       "Read(//c/Users/wgonzalez/Personal/NAOMI-II/**)",
       "Bash(wc -l /c/Users/wgonzalez/Personal/NAOMI-II/src/parser/*.py /c/Users/wgonzalez/Personal/NAOMI-II/src/embeddings/*.py /c/Users/wgonzalez/Personal/NAOMI-II/src/graph/*.py)",
       "Bash(grep -r \"def parse\" /c/Users/wgonzalez/Personal/NAOMI-II/src/parser/*.py)",
-      "Bash(wc -l /c/Users/wgonzalez/Personal/NAOMI-II/grammars/*.json)"
+      "Bash(wc -l /c/Users/wgonzalez/Personal/NAOMI-II/grammars/*.json)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []
