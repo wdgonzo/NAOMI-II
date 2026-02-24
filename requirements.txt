@@ -1,31 +1,26 @@
-# Core dependencies
+# NAOMI-II Parser Demo
+# The parser uses only the Python standard library -- no packages needed.
+# These are optional dependencies for the full research pipeline (prior_work/).
+
+# Core scientific computing (prior_work only)
 numpy>=1.24.0
 scipy>=1.10.0
 networkx>=3.0
 
-# NLP
+# NLP toolkit (prior_work only -- WordNet integration)
 nltk>=3.8
 
-# Visualization
+# Visualization (prior_work only)
 matplotlib>=3.7.0
 seaborn>=0.12.0
 plotly>=5.14.0
 
-# Machine Learning utilities
+# Machine Learning utilities (prior_work only)
 scikit-learn>=1.2.0
 
-# Data processing
+# Data processing (prior_work only)
 pandas>=2.0.0
-
-# Progress bars
 tqdm>=4.65.0
 
-# Deep Learning (PyTorch for RNN training)
-# Note: DirectML (NPU) support for Python 3.14+ is limited
-# The code supports NPU via DirectML if available, otherwise uses CPU/CUDA
+# Deep Learning (prior_work only -- embedding training)
 torch>=2.0.0
-# torch-directml  # Install separately if available for your Python version
-
-# Optional: If using JAX for autodiff
-# jax>=0.4.0
-# jaxlib>=0.4.0

@@ -8,29 +8,15 @@ env/
 venv/
 ENV/
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
 
-# Data (large files, generated)
-data/wordnet/
-data/wiktionary/
-data/parsed_definitions/
-data/embeddings/
+# Data (large generated files)
+prior_work/data/
+prior_work/deprecated/
 checkpoints/
 colab-results/
-deprecated/checkpoints*/  # Old checkpoint directories
 
 # Large binary/compressed files
 *.pkl
@@ -38,14 +24,6 @@ deprecated/checkpoints*/  # Old checkpoint directories
 *.xml
 *.xml.gz
 *.jsonl
-
-# Large text corpus files
-*.txt
-
-# Keep small metadata JSONs (parse_stats.json, graph_stats.json, vocabulary.json are OK)
-# Only ignore large JSONs in specific data directories
-data/*/parsed_corpus.json
-data/*/training_examples.json
 
 # IDE
 .vscode/
@@ -60,7 +38,6 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
-.ipynb
 
 # Logs
 *.log
