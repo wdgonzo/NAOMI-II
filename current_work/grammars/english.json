@@ -2340,6 +2340,20 @@
                     ],
                     "consume": ["before"],
                     "note": "Example: dog runs"
+                },
+                {
+                    "result": "CLAUSE",
+                    "recursive": false,
+                    "pattern": {
+                        "anchor": {
+                            "type": "PREDICATE"
+                        },
+                        "before": [],
+                        "after": []
+                    },
+                    "connections": [],
+                    "consume": [],
+                    "note": "Imperative: bare predicate becomes clause (subject added by normalizer)"
                 }
             ]
         },

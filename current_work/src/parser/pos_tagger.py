@@ -41,7 +41,16 @@ WORD_TAG_DICT = {
     "here": Tag.ADV, "there": Tag.ADV, "now": Tag.ADV,
     "where": Tag.ADV, "when": Tag.ADV, "why": Tag.ADV, "how": Tag.ADV,
 
-    #  Pronouns (including relative pronouns)
+    # Personal pronouns
+    "i": Tag.PRON, "me": Tag.PRON, "mine": Tag.PRON, "myself": Tag.PRON,
+    "you": Tag.PRON, "yours": Tag.PRON, "yourself": Tag.PRON,
+    "he": Tag.PRON, "him": Tag.PRON, "himself": Tag.PRON,
+    "she": Tag.PRON, "hers": Tag.PRON, "herself": Tag.PRON,
+    "it": Tag.PRON, "itself": Tag.PRON,
+    "we": Tag.PRON, "us": Tag.PRON, "ours": Tag.PRON, "ourselves": Tag.PRON,
+    "they": Tag.PRON, "them": Tag.PRON, "theirs": Tag.PRON, "themselves": Tag.PRON,
+
+    # Relative pronouns
     "who": Tag.PRON, "whom": Tag.PRON, "whose": Tag.PRON,
     "which": Tag.PRON, "that": Tag.PRON, "what": Tag.PRON,
 
@@ -86,9 +95,73 @@ WORD_TAG_DICT = {
     "like": Tag.VERB, "likes": Tag.VERB, "liked": Tag.VERB,
     "want": Tag.VERB, "wants": Tag.VERB, "wanted": Tag.VERB,
     "live": Tag.VERB, "lives": Tag.VERB, "lived": Tag.VERB,
+    "shut": Tag.VERB, "shuts": Tag.VERB,
+    "open": Tag.VERB, "opens": Tag.VERB, "opened": Tag.VERB,
+    "close": Tag.VERB, "closes": Tag.VERB, "closed": Tag.VERB,
+    "say": Tag.VERB, "says": Tag.VERB, "said": Tag.VERB,
+    "tell": Tag.VERB, "tells": Tag.VERB, "told": Tag.VERB,
+    "think": Tag.VERB, "thinks": Tag.VERB, "thought": Tag.VERB,
+    "know": Tag.VERB, "knows": Tag.VERB, "knew": Tag.VERB, "known": Tag.VERB,
+    "come": Tag.VERB, "comes": Tag.VERB, "came": Tag.VERB,
+    "put": Tag.VERB, "puts": Tag.VERB,
+    "read": Tag.VERB, "reads": Tag.VERB,
+    "write": Tag.VERB, "writes": Tag.VERB, "wrote": Tag.VERB, "written": Tag.VERB,
+    "find": Tag.VERB, "finds": Tag.VERB, "found": Tag.VERB,
+    "play": Tag.VERB, "plays": Tag.VERB, "played": Tag.VERB,
+    "try": Tag.VERB, "tries": Tag.VERB, "tried": Tag.VERB,
+    "ask": Tag.VERB, "asks": Tag.VERB, "asked": Tag.VERB,
+    "call": Tag.VERB, "calls": Tag.VERB, "called": Tag.VERB,
+    "keep": Tag.VERB, "keeps": Tag.VERB, "kept": Tag.VERB,
+    "let": Tag.VERB, "lets": Tag.VERB,
+    "begin": Tag.VERB, "begins": Tag.VERB, "began": Tag.VERB,
+    "show": Tag.VERB, "shows": Tag.VERB, "showed": Tag.VERB, "shown": Tag.VERB,
+    "hear": Tag.VERB, "hears": Tag.VERB, "heard": Tag.VERB,
+    "feel": Tag.VERB, "feels": Tag.VERB, "felt": Tag.VERB,
+    "become": Tag.VERB, "becomes": Tag.VERB, "became": Tag.VERB,
+    "set": Tag.VERB, "sets": Tag.VERB,
+    "move": Tag.VERB, "moves": Tag.VERB, "moved": Tag.VERB,
+    "turn": Tag.VERB, "turns": Tag.VERB, "turned": Tag.VERB,
+    "bring": Tag.VERB, "brings": Tag.VERB, "brought": Tag.VERB,
+    "look": Tag.VERB, "looks": Tag.VERB, "looked": Tag.VERB,
+    "help": Tag.VERB, "helps": Tag.VERB, "helped": Tag.VERB,
+    "talk": Tag.VERB, "talks": Tag.VERB, "talked": Tag.VERB,
+    "start": Tag.VERB, "starts": Tag.VERB, "started": Tag.VERB,
+    "stop": Tag.VERB, "stops": Tag.VERB, "stopped": Tag.VERB,
+    "hold": Tag.VERB, "holds": Tag.VERB, "held": Tag.VERB,
+    "sit": Tag.VERB, "sits": Tag.VERB, "sat": Tag.VERB,
+    "stand": Tag.VERB, "stands": Tag.VERB, "stood": Tag.VERB,
+    "lose": Tag.VERB, "loses": Tag.VERB, "lost": Tag.VERB,
+    "pay": Tag.VERB, "pays": Tag.VERB, "paid": Tag.VERB,
+    "send": Tag.VERB, "sends": Tag.VERB, "sent": Tag.VERB,
+    "build": Tag.VERB, "builds": Tag.VERB, "built": Tag.VERB,
+    "fall": Tag.VERB, "falls": Tag.VERB, "fell": Tag.VERB, "fallen": Tag.VERB,
+    "cut": Tag.VERB, "cuts": Tag.VERB,
+    "reach": Tag.VERB, "reaches": Tag.VERB, "reached": Tag.VERB,
+    "kill": Tag.VERB, "kills": Tag.VERB, "killed": Tag.VERB,
+    "raise": Tag.VERB, "raises": Tag.VERB, "raised": Tag.VERB,
+    "pass": Tag.VERB, "passes": Tag.VERB, "passed": Tag.VERB,
+    "sell": Tag.VERB, "sells": Tag.VERB, "sold": Tag.VERB,
+    "buy": Tag.VERB, "buys": Tag.VERB, "bought": Tag.VERB,
+    "lead": Tag.VERB, "leads": Tag.VERB, "led": Tag.VERB,
+    "understand": Tag.VERB, "understands": Tag.VERB, "understood": Tag.VERB,
+    "watch": Tag.VERB, "watches": Tag.VERB, "watched": Tag.VERB,
+    "follow": Tag.VERB, "follows": Tag.VERB, "followed": Tag.VERB,
+    "create": Tag.VERB, "creates": Tag.VERB, "created": Tag.VERB,
+    "speak": Tag.VERB, "speaks": Tag.VERB, "spoke": Tag.VERB, "spoken": Tag.VERB,
+    "allow": Tag.VERB, "allows": Tag.VERB, "allowed": Tag.VERB,
+    "add": Tag.VERB, "adds": Tag.VERB, "added": Tag.VERB,
+    "grow": Tag.VERB, "grows": Tag.VERB, "grew": Tag.VERB, "grown": Tag.VERB,
+    "wait": Tag.VERB, "waits": Tag.VERB, "waited": Tag.VERB,
+    "save": Tag.VERB, "saves": Tag.VERB, "saved": Tag.VERB,
+    "spend": Tag.VERB, "spends": Tag.VERB, "spent": Tag.VERB,
+    "win": Tag.VERB, "wins": Tag.VERB, "won": Tag.VERB,
+    "die": Tag.VERB, "dies": Tag.VERB, "died": Tag.VERB,
+    "love": Tag.VERB, "loves": Tag.VERB, "loved": Tag.VERB,
+    "need": Tag.VERB, "needs": Tag.VERB, "needed": Tag.VERB,
 
     # Particles (negation, infinitive marker, possession, etc.)
     "not": Tag.PART, "n't": Tag.PART, "to": Tag.PART, "'s": Tag.PART,
+    "up": Tag.PART, "out": Tag.PART, "off": Tag.PART, "down": Tag.PART,
 
     # Common nouns
     "dog": Tag.NOUN, "dogs": Tag.NOUN, "cat": Tag.NOUN, "cats": Tag.NOUN,
@@ -674,6 +747,10 @@ def simple_tag(text: str) -> Tag:
         return Tag.QUOTE
 
     text_lower = text.lower()
+
+    # Numeric detection
+    if text.isdigit() or (text.replace('.', '', 1).replace(',', '').isdigit()):
+        return Tag.NUM
 
     # Check dictionary
     if text_lower in WORD_TAG_DICT:

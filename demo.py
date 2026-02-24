@@ -244,10 +244,11 @@ def _hierarchical_layout(G, hypothesis):
             y = -level * 1.5
             pos[node] = (x, y)
 
-    # Any nodes not placed (disconnected) get spring layout
-    for node in G.nodes():
-        if node not in pos:
-            pos[node] = (0, -(max_level + 1) * 1.5)
+    # Spread disconnected nodes instead of stacking at one point
+    unplaced = [n for n in G.nodes() if n not in pos]
+    for i, node in enumerate(unplaced):
+        x = (i - (len(unplaced) - 1) / 2) * 1.5
+        pos[node] = (x, -(max_level + 1) * 1.5)
 
     return pos
 
@@ -470,12 +471,30 @@ def run_demo_noninteractive():
     print("=" * 64)
 
 
+def check_visualization_deps():
+    """Check if matplotlib/networkx are installed and notify user if not."""
+    missing = []
+    try:
+        import matplotlib
+    except ImportError:
+        missing.append("matplotlib")
+    try:
+        import networkx
+    except ImportError:
+        missing.append("networkx")
+    if missing:
+        print(f"  Note: Install {', '.join(missing)} for tree visualization:")
+        print(f"    pip install {' '.join(missing)}")
+        print()
+
+
 def main():
     if "--all" in sys.argv:
         run_demo_noninteractive()
         return
 
     print_banner()
+    check_visualization_deps()
     print("  Modes:")
     print("    [1] English   — Parse English sentences")
     print("    [2] Spanish   — Parse Spanish sentences")
