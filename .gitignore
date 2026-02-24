@@ -24,13 +24,11 @@ wheels/
 *.egg
 
 # Data (large files, generated)
-data/wordnet/
-data/wiktionary/
-data/parsed_definitions/
-data/embeddings/
+prior_work/data/
 checkpoints/
-colab-results/
-deprecated/checkpoints*/  # Old checkpoint directories
+output/
+results/
+dimension_analysis/
 
 # Large binary/compressed files
 *.pkl
@@ -39,13 +37,8 @@ deprecated/checkpoints*/  # Old checkpoint directories
 *.xml.gz
 *.jsonl
 
-# Large text corpus files
-*.txt
-
-# Keep small metadata JSONs (parse_stats.json, graph_stats.json, vocabulary.json are OK)
-# Only ignore large JSONs in specific data directories
-data/*/parsed_corpus.json
-data/*/training_examples.json
+# Large text corpus files (not .md or .json)
+data/**/*.txt
 
 # IDE
 .vscode/
@@ -58,9 +51,8 @@ data/*/training_examples.json
 .DS_Store
 Thumbs.db
 
-# Jupyter
+# Jupyter checkpoints
 .ipynb_checkpoints/
-.ipynb
 
 # Logs
 *.log

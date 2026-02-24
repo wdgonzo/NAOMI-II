@@ -12,7 +12,12 @@
       "Bash(timeout 10 sleep:*)",
       "Bash(nul)",
       "Bash(timeout 5 sleep:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(ls -lh /c/Users/wgonzalez/Personal/NAOMI-II/*.md)",
+      "Read(//c/Users/wgonzalez/Personal/NAOMI-II/**)",
+      "Bash(wc -l /c/Users/wgonzalez/Personal/NAOMI-II/src/parser/*.py /c/Users/wgonzalez/Personal/NAOMI-II/src/embeddings/*.py /c/Users/wgonzalez/Personal/NAOMI-II/src/graph/*.py)",
+      "Bash(grep -r \"def parse\" /c/Users/wgonzalez/Personal/NAOMI-II/src/parser/*.py)",
+      "Bash(wc -l /c/Users/wgonzalez/Personal/NAOMI-II/grammars/*.json)"
     ],
     "deny": [],
     "ask": []

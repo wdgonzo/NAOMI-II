@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**NAOMI-II (New Age of Machine Intelligence - Version II)** is a universal semantic representation system building AGI through language-agnostic parsing, WordNet-guided embedding learning, and graph-based reasoning. The system operates on the principle that **structure IS meaning** - using explicit parse trees and semantic relationships rather than opaque transformer models.
+**NAOMI-II (New Age of Machine Intelligence - Version II)** is a universal semantic representation system exploring language-agnostic parsing, WordNet-guided embedding learning, and graph-based reasoning. The system operates on the principle that **structure IS meaning** - using explicit parse trees and semantic relationships rather than opaque transformer models.
 
 **Core Innovation**: Parse sentences into trees → Encode to semantic vectors → Reason via knowledge graphs
 
@@ -50,7 +50,7 @@
 
 | Document | Purpose | Read Time | When to Read |
 |----------|---------|-----------|--------------|
-| **[docs/INCREMENTAL_LEARNING_DESIGN.md](../docs/INCREMENTAL_LEARNING_DESIGN.md)** | **3-graph incremental learning** | **30 min** | **AGI ARCHITECTURE** |
+| **[docs/INCREMENTAL_LEARNING_DESIGN.md](../docs/INCREMENTAL_LEARNING_DESIGN.md)** | **3-graph incremental learning** | **30 min** | **CORE ARCHITECTURE** |
 | [docs/MEMORY_GRAPH_VISION.md](../docs/MEMORY_GRAPH_VISION.md) | Reasoning & knowledge graphs | 25 min | Future vision |
 | [SCALING_PLAN.md](../SCALING_PLAN.md) | Scaling to production | 15 min | Planning |
 | [LEGACY_CONCEPTS.md](../LEGACY_CONCEPTS.md) | Original NAOMI design | 20 min | Historical |
@@ -124,35 +124,23 @@ The system has successfully completed end-to-end corpus training with Word Sense
 
 ### When Making Changes
 
-**Grammar Files ([grammars/](../grammars/)):**
-- Document all changes in [GRAMMAR_UPDATES.md](../GRAMMAR_UPDATES.md)
+**Grammar Files ([current_work/grammars/](../current_work/grammars/)):**
+- Document all changes in [references/GRAMMAR_UPDATES.md](../references/GRAMMAR_UPDATES.md)
 - Test with example sentences
 - Validate against existing parse outputs
 - Check both English and Spanish grammars
 
-**Parser Core ([src/parser/](../src/parser/)):**
+**Parser Core ([current_work/src/parser/](../current_work/src/parser/)):**
 - Maintain hypothesis tracking integrity
 - Ensure backward compatibility with grammar files
-- Update tests (see [tests/test_comprehensive.py](../tests/test_comprehensive.py))
+- Update tests (see [current_work/tests/](../current_work/tests/))
 - Test normalization pipeline
 
-**Embedding Model ([src/embeddings/](../src/embeddings/)):**
+**Embedding Model (prior_work/embeddings/):**
 - **NEVER** modify anchor dimensions (first 51 dims)
 - Test on validation set after changes
 - Save checkpoints every 10 epochs
 - Preserve sense-tagged vocabulary format
-
-**Data Pipeline ([src/data_pipeline/](../src/data_pipeline/)):**
-- Handle errors gracefully (skip, don't crash)
-- Log all processing steps
-- Use multiprocessing for batch operations
-- Checkpoint for resumability
-
-**Word Sense Disambiguation ([src/embeddings/sense_mapper.py](../src/embeddings/sense_mapper.py)):**
-- Use parse context + WordNet definitions
-- No dependency on learned embeddings
-- High-confidence scoring for disambiguation
-- Fallback for OOV words
 
 ## Common Commands
 
@@ -171,17 +159,17 @@ python -c "import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')"
 
 ### Testing
 ```bash
-# Run all tests
-pytest tests/
+# Run core parser tests
+pytest current_work/tests/test_english.py current_work/tests/test_spanish.py -v
 
 # Run comprehensive tests
-python tests/test_comprehensive.py
+python current_work/tests/test_comprehensive.py
 
-# Run graph tests
-python tests/test_graph.py
+# Run the interactive demo
+python demo.py
 
-# Run embedding integration tests
-python tests/test_embeddings_integration.py
+# Run all demo examples non-interactively
+python demo.py --all
 ```
 
 ### Parsing
@@ -250,48 +238,42 @@ python scripts/visualize_embeddings.py \
 
 ```
 NAOMI-II/
-├── .claude/                    # Claude Code configuration
-│   └── CLAUDE.md              # This file
-├── src/
-│   ├── parser/                # Quantum parser implementation
-│   │   ├── quantum_parser.py  # Main parsing engine
-│   │   ├── normalizer.py      # Parse tree normalization
-│   │   ├── pos_tagger.py      # POS tagging
-│   │   └── enums.py           # Type definitions
-│   ├── graph/                 # Knowledge graph operations
-│   │   ├── triple_extractor.py # Parse tree → triples
-│   │   └── knowledge_graph.py  # Graph data structure
-│   ├── embeddings/            # Embedding system
-│   │   ├── sense_mapper.py    # WSD core algorithm ✨ NEW
-│   │   ├── model.py           # Embedding model
-│   │   ├── anchors.py         # Predefined dimensions
-│   │   └── training.py        # Training loop
-│   ├── data_pipeline/         # Data processing
-│   │   └── corpus_loader.py   # Corpus loading utilities
-│   └── utils/                 # Utilities
-├── scripts/                   # Executable scripts
-│   ├── batch_parse_corpus.py  # Batch corpus parser ✨ NEW
-│   ├── build_sense_graph.py   # Graph builder ✨ NEW
-│   ├── train_embeddings.py    # Training script ✨ NEW
-│   └── test_embeddings.py     # Quality tests ✨ NEW
-├── grammars/                  # Language grammar files
-│   └── english.json           # English grammar (85KB)
-├── data/                      # Generated data (gitignored)
-│   ├── parsed_corpus_1k/      # Parsed Brown corpus
-│   └── sense_graph/           # Knowledge graph
-├── checkpoints/               # Model checkpoints
-│   ├── embeddings.npy         # Trained embeddings ✅
-│   └── vocabulary.json        # Sense-tagged vocabulary ✅
-├── tests/                     # Unit tests
-│   ├── test_comprehensive.py  # 40+ parsing tests
-│   ├── test_graph.py          # Graph operations
-│   └── test_embeddings_integration.py # WSD + training
-├── docs/                      # Additional documentation
-│   ├── MULTILINGUAL_TRAINING.md
-│   ├── MEMORY_GRAPH_VISION.md
-│   ├── TRAINING_DEPLOYMENT.md
-│   └── ...
-└── README.md                  # Main project README
+├── demo.py                        # Interactive bilingual parser demo
+├── README.md                      # Project overview (MIT-ready)
+├── requirements.txt               # Python dependencies
+├── .claude/                       # Claude Code configuration
+│   └── CLAUDE.md                  # This file
+├── current_work/                  # Active, functional code
+│   ├── src/parser/                # Parser engine (language-agnostic)
+│   │   ├── quantum_parser.py      # Main parsing engine
+│   │   ├── chart_parser.py        # Chart parser (exhaustive)
+│   │   ├── data_structures.py     # Word, Node, Edge, Hypothesis
+│   │   ├── dsl.py                 # Grammar DSL loader
+│   │   ├── enums.py               # Tag, NodeType, ConnectionType
+│   │   ├── matcher.py             # Grammar rule matching
+│   │   ├── normalizer.py          # Parse tree normalization
+│   │   ├── pos_tagger.py          # POS tagging (EN + ES)
+│   │   ├── scorer.py              # Semantic scoring
+│   │   └── visualizer.py          # DOT/text tree output
+│   ├── grammars/                  # Language grammar files
+│   │   ├── english.json           # English grammar (85KB)
+│   │   └── spanish.json           # Spanish grammar (82KB)
+│   └── tests/                     # Parser test suites
+│       ├── test_english.py
+│       ├── test_spanish.py
+│       ├── test_comprehensive.py
+│       └── test_spanish_comprehensive.py
+├── prior_work/                    # Research & experimental code
+│   ├── embeddings/                # Semantic embedding system
+│   ├── graph/                     # Knowledge graph construction
+│   ├── scripts/                   # Training & analysis pipelines
+│   ├── notebooks/                 # Colab training notebooks
+│   ├── Previous Manual Work/      # Original Go prototype
+│   └── DEVELOPMENT_NOTES.md       # Summary of research work
+└── references/                    # Documentation & specs
+    ├── docs/                      # Training guides, setup docs
+    ├── ARCHITECTURE.md            # Full technical design (80KB)
+    └── GRAMMAR_DESIGN.md          # How to write grammars
 ```
 
 ## Important Notes
