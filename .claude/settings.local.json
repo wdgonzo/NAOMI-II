@@ -18,7 +18,8 @@
       "Bash(wc -l /c/Users/wgonzalez/Personal/NAOMI-II/src/parser/*.py /c/Users/wgonzalez/Personal/NAOMI-II/src/embeddings/*.py /c/Users/wgonzalez/Personal/NAOMI-II/src/graph/*.py)",
       "Bash(grep -r \"def parse\" /c/Users/wgonzalez/Personal/NAOMI-II/src/parser/*.py)",
       "Bash(wc -l /c/Users/wgonzalez/Personal/NAOMI-II/grammars/*.json)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(grep -n \"class Match\\\\|def find_matches\\\\|class Rule\\\\|class ConnectionSpec\" /c/Users/wgonzalez/Personal/NAOMI-II/current_work/src/parser/*.py)"
     ],
     "deny": [],
     "ask": []

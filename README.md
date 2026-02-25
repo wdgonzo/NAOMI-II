@@ -4,7 +4,7 @@
 
 NAOMI-II is a deterministic semantic parser that captures *what is said*, not *how it's said*. The same sentence in English, Spanish, French, German, Portuguese, or Japanese produces the same abstract parse tree. One parser engine, different grammar files, identical meaning representation.
 
-This isn't translation. It's a universal intermediary for language itself.
+This mirrors how humans actually interact with language — understanding the *meaning* of a sentence, then expressing that meaning in another form. The abstract tree is the intermediary.
 
 ## Quick Demo
 
@@ -108,6 +108,29 @@ These are the same regardless of input language. Different languages just have d
 
 **Adding a new language** = one JSON grammar file + word dictionary. The parser engine never changes.
 
+## Translation
+
+The same grammar rules that parse sentences can generate them. Parse in one language, translate words, linearize with the target grammar — the tree is the bridge.
+
+```
+"The dog chases the cat"  →  parse EN  →  abstract tree  →  linearize ES  →  "El perro persigue el gato"
+"The dog chases the cat"  →  parse EN  →  abstract tree  →  linearize JA  →  "inu ga neko wo ou"
+"El perro corre"          →  parse ES  →  abstract tree  →  linearize EN  →  "The dog runs"
+```
+
+The translator pipeline:
+1. **Parse** the source sentence into an abstract tree
+2. **Word lookup** — bilingual dictionary with NLTK Open Multilingual Wordnet fallback
+3. **Surface forms** — conjugate verbs, inflect adjectives, select determiners for the target language
+4. **Linearize** — walk the tree using target grammar rules (`before`/`after` encode word order)
+
+This works because grammar rules are bidirectional: the `before`/`after` positions that guide *parsing* also guide *generation*. English puts objects after the verb (SVO), Japanese puts them before (SOV) — the grammar files encode both directions.
+
+```bash
+# Try it
+python demo.py       # select [t] Translate
+```
+
 ## Project Structure
 
 ```
@@ -118,8 +141,9 @@ NAOMI-II/
 │
 ├── current_work/            # Active, functional code
 │   ├── src/parser/          # Parser engine (language-agnostic)
+│   ├── src/translator/      # Structure-based translator (any pair of 6 languages)
 │   ├── grammars/            # 6 language grammar files
-│   └── tests/               # Parser test suites (EN, ES, FR, DE, PT, JA)
+│   └── tests/               # Parser & translator test suites
 │
 ├── prior_work/              # Research & experimental code
 │   ├── embeddings/          # Semantic embedding experiments
@@ -146,6 +170,9 @@ python current_work/tests/test_japanese.py
 
 # Comprehensive test suite (40+ tests)
 python current_work/tests/test_comprehensive.py
+
+# Translator tests (11 translation pairs)
+python current_work/tests/test_translator.py
 ```
 
 ## Technical Details
@@ -161,4 +188,13 @@ For the full technical design, see [references/ARCHITECTURE.md](references/ARCHI
 
 NAOMI-II evolved from a Go-based parser prototype (2024) into a Python system with a custom grammar DSL, parallel hypothesis exploration, and 6-language support. The project demonstrates that meaning has structure independent of any particular language — and that this structure can be captured algorithmically with a single deterministic engine.
 
-The `prior_work/` directory contains research into semantic embeddings, knowledge graphs, and training pipelines — encoding parse trees into continuous vector spaces where logical operations (NOT, AND, OR) operate directly on meaning.
+## Future Work
+
+The `prior_work/` directory contains research into the next stages:
+
+- **Semantic embeddings** — encoding parse trees into continuous vector spaces where each dimension has interpretable meaning (not opaque like Word2Vec/BERT)
+- **Knowledge graphs** — extracting structured triples from parse trees for reasoning
+- **Training pipelines** — Wikipedia-scale corpus parsing, Word Sense Disambiguation, embedding training on A100 GPUs
+- **Logical operations** — NOT, AND, OR operating directly on meaning vectors
+
+See [references/ARCHITECTURE.md](references/ARCHITECTURE.md) for the full technical design.

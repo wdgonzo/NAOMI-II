@@ -28,6 +28,9 @@ from src.parser.pos_tagger import (
     tag_french_sentence, tag_german_sentence,
     tag_portuguese_sentence, tag_japanese_sentence,
 )
+from src.translator import Translator
+from src.translator.word_lookup import WordLookup
+from src.parser.enums import NodeType, ConnectionType
 
 
 # ---------------------------------------------------------------------------
@@ -455,6 +458,401 @@ def mode_compare():
             print("  >> Most languages share structural overlap (beta grammars may vary).")
 
 
+def _build_bilingual_labels(hypothesis, word_lookup: WordLookup,
+                            surface_forms=None) -> dict:
+    """
+    Build bilingual labels for every node: {node_idx: (source_word, target_word)}.
+
+    For determiners (function words), looks up the target article using the
+    noun's gender from the surface_forms module.
+    """
+    from src.parser.enums import Tag
+
+    # Determiner translation table
+    DET_MAP = {
+        'english': {'el': 'the', 'la': 'the', 'los': 'the', 'las': 'the',
+                    'le': 'the', 'la': 'the', 'les': 'the',
+                    'der': 'the', 'die': 'the', 'das': 'the',
+                    'o': 'the', 'a': 'the', 'os': 'the', 'as': 'the'},
+        'spanish': {'the': 'el', 'le': 'el', 'la': 'la', 'der': 'el',
+                    'die': 'la', 'das': 'el', 'o': 'el', 'a': 'la'},
+        'french': {'the': 'le', 'el': 'le', 'la': 'la', 'der': 'le',
+                   'die': 'la', 'das': 'le', 'o': 'le', 'a': 'la'},
+        'german': {'the': 'der', 'el': 'der', 'la': 'die', 'le': 'der',
+                   'o': 'der', 'a': 'die'},
+        'portuguese': {'the': 'o', 'el': 'o', 'la': 'a', 'le': 'o',
+                       'der': 'o', 'die': 'a', 'das': 'o'},
+        'japanese': {},  # No articles
+    }
+
+    target_dets = DET_MAP.get(word_lookup.target_lang, {})
+
+    labels = {}
+    for i, node in enumerate(hypothesis.nodes):
+        if not node.value:
+            labels[i] = (None, None)
+            continue
+
+        src_word = node.value.text
+        pos = node.value.pos
+
+        # Determiners: use article mapping
+        if pos == Tag.DET:
+            tgt = target_dets.get(src_word.lower(), src_word)
+            labels[i] = (src_word, tgt)
+            continue
+
+        # Content words: use word lookup
+        tgt_word = word_lookup.lookup(src_word, pos)
+        labels[i] = (src_word, tgt_word)
+
+    return labels
+
+
+def _build_bidirectional_children(hypothesis):
+    """
+    Build a tree using bidirectional edge traversal from unconsumed roots.
+
+    NAOMI-II edges use (parent, child) as (from, to) in grammatical direction,
+    NOT tree hierarchy. DESCRIPTION edges go FROM modifier TO noun, so the
+    modifier is the 'parent' but it's a dependent in the tree. We follow edges
+    in both directions to capture all connected nodes.
+
+    Returns: {node_idx: [(child_node_idx, edge_type_name), ...]}
+    """
+    unconsumed = hypothesis.get_unconsumed()
+    tree = {i: [] for i in range(len(hypothesis.nodes))}
+    visited = set()
+
+    def _traverse(node_idx):
+        visited.add(node_idx)
+        for edge in hypothesis.edges:
+            # Follow edge in either direction
+            if edge.parent == node_idx and edge.child not in visited:
+                tree[node_idx].append((edge.child, edge.type.name))
+                _traverse(edge.child)
+            elif edge.child == node_idx and edge.parent not in visited:
+                tree[node_idx].append((edge.parent, edge.type.name))
+                _traverse(edge.parent)
+
+    for root_idx in unconsumed:
+        _traverse(root_idx)
+
+    return tree
+
+
+def print_bilingual_tree(hypothesis, word_lookup: WordLookup,
+                         src_code: str, tgt_code: str):
+    """
+    Print a bilingual intermediary tree showing source/target words at each node.
+
+    Uses bidirectional edge traversal to capture determiners, adjectives, and
+    all other modifiers that connect via DESCRIPTION edges.
+
+    Example output:
+        +-- runs/corre (CLAUSE <- VERBAL)
+            +--[SUBJECT]
+                +-- The/El (DESCRIPTOR)
+                +-- dog/perro (NOMINAL <- NOUN)
+    """
+    labels = _build_bilingual_labels(hypothesis, word_lookup)
+    unconsumed = hypothesis.get_unconsumed()
+    tree = _build_bidirectional_children(hypothesis)
+
+    print(f"Bilingual Tree ({src_code} -> {tgt_code})")
+    print("=" * 60)
+
+    for root_idx in unconsumed:
+        _print_bilingual_recursive(hypothesis, root_idx, tree, labels)
+
+    print()
+
+
+def _print_bilingual_recursive(hyp, node_idx, tree, labels,
+                                prefix="", is_last=True):
+    """Recursively print bilingual tree structure."""
+    node = hyp.nodes[node_idx]
+    src_word, tgt_word = labels.get(node_idx, (None, None))
+
+    # Build the node label: source/target (TYPE)
+    connector = "+-- " if is_last else "|-- "
+
+    if src_word and tgt_word:
+        if src_word.lower() == tgt_word.lower():
+            word_label = src_word
+        else:
+            word_label = f"{src_word}/{tgt_word}"
+    elif src_word:
+        word_label = src_word
+    else:
+        word_label = "(constructed)"
+
+    type_str = node.type.name
+    if node.type != node.original_type:
+        type_str += f" <- {node.original_type.name}"
+
+    print(f"{prefix}{connector}{word_label} ({type_str})")
+
+    # Print children with edge labels
+    children = tree.get(node_idx, [])
+    for i, (child_idx, edge_type) in enumerate(children):
+        is_last_child = (i == len(children) - 1)
+
+        edge_prefix = prefix + ("    " if is_last else "|   ")
+        edge_connector = "+--" if is_last_child else "|--"
+        print(f"{edge_prefix}{edge_connector}[{edge_type}]")
+
+        child_prefix = prefix + ("    " if is_last else "|   ") + \
+                       ("    " if is_last_child else "|   ")
+        _print_bilingual_recursive(hyp, child_idx, tree, labels,
+                                    child_prefix, is_last_child)
+
+
+def render_bilingual_tree_matplotlib(hypothesis, word_lookup: WordLookup,
+                                     title: str, ax=None):
+    """Render a bilingual tree using matplotlib — each node shows source/target."""
+    try:
+        import matplotlib.pyplot as plt
+        import networkx as nx
+    except ImportError:
+        print("  [matplotlib/networkx not installed — skipping visual render]")
+        return None
+
+    if hypothesis is None:
+        if ax:
+            ax.text(0.5, 0.5, "Parse failed", ha="center", va="center",
+                    fontsize=14, transform=ax.transAxes)
+            ax.set_title(title)
+        return None
+
+    bilabels = _build_bilingual_labels(hypothesis, word_lookup)
+    tree = _build_bidirectional_children(hypothesis)
+
+    G = nx.DiGraph()
+    unconsumed = set(hypothesis.get_unconsumed())
+
+    # Add nodes with bilingual labels
+    labels = {}
+    colors = []
+    for i, node in enumerate(hypothesis.nodes):
+        src_w, tgt_w = bilabels.get(i, (None, None))
+        if src_w and tgt_w and src_w.lower() != tgt_w.lower():
+            word_str = f"{src_w}/{tgt_w}"
+        elif src_w:
+            word_str = src_w
+        else:
+            word_str = "?"
+
+        ntype = node.type.name
+        G.add_node(i)
+        labels[i] = f"{word_str}\n({ntype})"
+        if i in unconsumed:
+            colors.append("#4CAF50")
+        else:
+            colors.append("#90CAF9")
+
+    # Add edges from bidirectional tree (parent->child in tree order)
+    edge_labels = {}
+    for parent_idx, children in tree.items():
+        for child_idx, edge_type in children:
+            G.add_edge(parent_idx, child_idx)
+            edge_labels[(parent_idx, child_idx)] = edge_type
+
+    if not G.nodes():
+        return None
+
+    pos = _hierarchical_layout(G, hypothesis)
+
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(12, 7))
+
+    nx.draw(
+        G, pos, ax=ax,
+        labels=labels,
+        node_color=colors,
+        node_size=3000,
+        font_size=7,
+        font_weight="bold",
+        arrows=True,
+        arrowsize=15,
+        edge_color="#666666",
+        node_shape="s",
+        linewidths=1.5,
+        edgecolors="#333333",
+    )
+    nx.draw_networkx_edge_labels(
+        G, pos, ax=ax,
+        edge_labels=edge_labels,
+        font_size=6,
+        font_color="#B71C1C",
+        bbox=dict(boxstyle="round,pad=0.1", fc="white", ec="none", alpha=0.8),
+    )
+
+    ax.set_title(title, fontsize=11, fontweight="bold", pad=10)
+    ax.margins(0.15)
+    return ax
+
+
+def mode_translate():
+    """Translate a sentence between any two supported languages."""
+    lang_list = list(LANGUAGES.keys())
+
+    print("\n  [Translate Mode]")
+    print("  Source language:")
+    for i, lang in enumerate(lang_list):
+        code = LANGUAGES[lang]["code"]
+        status = LANGUAGES[lang]["status"]
+        tag = f" ({status})" if status != "Production" else ""
+        print(f"    [{i+1}] {lang.capitalize()}{tag}")
+    print()
+    print("  Press Enter to return to home menu.")
+
+    try:
+        src_choice = input("\n  Source> ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return
+
+    if not src_choice:
+        return
+
+    try:
+        src_idx = int(src_choice) - 1
+        if not (0 <= src_idx < len(lang_list)):
+            print("  Invalid selection.")
+            return
+        source_lang = lang_list[src_idx]
+    except ValueError:
+        # Try matching by name or code
+        src_lower = src_choice.lower()
+        source_lang = None
+        for lang in lang_list:
+            if lang == src_lower or LANGUAGES[lang]["code"].lower() == src_lower:
+                source_lang = lang
+                break
+        if not source_lang:
+            print("  Invalid selection.")
+            return
+
+    src_code = LANGUAGES[source_lang]["code"]
+
+    # Show examples for source language
+    available_examples = []
+    for ex in EXAMPLE_SETS:
+        if source_lang in ex:
+            available_examples.append(ex)
+
+    print(f"\n  Source: {source_lang.capitalize()} ({src_code})")
+    print("  Enter a sentence or pick an example:")
+    for i, ex in enumerate(available_examples):
+        print(f"    [{i+1}] \"{ex[source_lang]}\"")
+    print()
+
+    try:
+        sentence_choice = input(f"  {src_code}> ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return
+
+    if not sentence_choice:
+        return
+
+    try:
+        ex_idx = int(sentence_choice) - 1
+        if 0 <= ex_idx < len(available_examples):
+            sentence = available_examples[ex_idx][source_lang]
+        else:
+            sentence = sentence_choice
+    except ValueError:
+        sentence = sentence_choice
+
+    # Target language
+    print("\n  Target language:")
+    for i, lang in enumerate(lang_list):
+        if lang == source_lang:
+            continue
+        code = LANGUAGES[lang]["code"]
+        status = LANGUAGES[lang]["status"]
+        tag = f" ({status})" if status != "Production" else ""
+        print(f"    [{i+1}] {lang.capitalize()}{tag}")
+
+    try:
+        tgt_choice = input("\n  Target> ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return
+
+    if not tgt_choice:
+        return
+
+    try:
+        tgt_idx = int(tgt_choice) - 1
+        if not (0 <= tgt_idx < len(lang_list)):
+            print("  Invalid selection.")
+            return
+        target_lang = lang_list[tgt_idx]
+    except ValueError:
+        tgt_lower = tgt_choice.lower()
+        target_lang = None
+        for lang in lang_list:
+            if lang == tgt_lower or LANGUAGES[lang]["code"].lower() == tgt_lower:
+                target_lang = lang
+                break
+        if not target_lang:
+            print("  Invalid selection.")
+            return
+
+    if target_lang == source_lang:
+        print("  Source and target are the same language.")
+        return
+
+    tgt_code = LANGUAGES[target_lang]["code"]
+
+    # Parse source
+    print(f"\n  Translating: {src_code} -> {tgt_code}")
+    print(f'  Source: "{sentence}"')
+    print()
+
+    try:
+        hyp, chart, words = parse_sentence(sentence, source_lang)
+    except Exception as e:
+        print(f"  Parse error: {e}")
+        return
+
+    if hyp is None:
+        print("  Parse failed — no valid hypothesis found.")
+        return
+
+    # Translate
+    try:
+        translator = Translator(source_lang, target_lang)
+        result = translator.translate(hyp)
+    except Exception as e:
+        print(f"  Translation error: {e}")
+        return
+
+    # Show bilingual intermediary tree
+    print_bilingual_tree(hyp, translator.word_lookup, src_code, tgt_code)
+
+    print("  " + "-" * 50)
+    print(f'  {src_code}: "{sentence}"')
+    print(f'  {tgt_code}: "{result}"')
+    print("  " + "-" * 50)
+
+    # Offer matplotlib visualization
+    try:
+        resp = input("\n  Show bilingual tree visualization? [y/N] ").strip().lower()
+        if resp == "y":
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(1, 1, figsize=(12, 7))
+            title = f"Translation: {src_code} -> {tgt_code}"
+            render_bilingual_tree_matplotlib(
+                hyp, translator.word_lookup, title, ax=ax)
+            plt.tight_layout()
+            plt.show()
+    except (EOFError, KeyboardInterrupt):
+        pass
+
+    print()
+
+
 def run_demo_noninteractive():
     """Run all example sets non-interactively (for quick showcase)."""
     print_banner()
@@ -550,6 +948,7 @@ def print_home_menu():
     print("    [3] French     (Beta)    [6] Japanese     (Beta)")
     print()
     print("  Tools:")
+    print("    [t] Translate — Translate between any two languages")
     print("    [c] Compare   — Multilingual structural comparison")
     print("    [a] Run All   — Auto-run all examples across 6 languages")
     print("    [q] Quit")
@@ -581,6 +980,8 @@ def main():
 
         if choice in lang_keys:
             mode_single(lang_keys[choice])
+        elif choice in ("t", "translate"):
+            mode_translate()
         elif choice in ("c", "compare"):
             mode_compare()
         elif choice in ("a", "all"):
@@ -589,7 +990,7 @@ def main():
             print("  Goodbye!")
             break
         else:
-            print("  Invalid choice. Enter 1-6, c, a, or q.")
+            print("  Invalid choice. Enter 1-6, t, c, a, or q.")
 
 
 if __name__ == "__main__":
