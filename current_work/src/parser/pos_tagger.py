@@ -789,6 +789,8 @@ def simple_tag(text: str, nltk_hint: str = None) -> Tag:
         return Tag.EM_DASH
     if text in ['"', "'", '"', '"', ''', ''']:  # All quote variants
         return Tag.QUOTE
+    if text in ('.', '?', '!'):
+        return Tag.PUNCT
 
     text_lower = text.lower()
 
@@ -842,6 +844,18 @@ def _get_nltk_tags(tokens: List[str]) -> dict:
         return {}
 
 
+def _split_trailing_punct(tokens: list) -> list:
+    """Separate trailing sentence punctuation (.?!) from tokens."""
+    clean = []
+    for t in tokens:
+        if len(t) > 1 and t[-1] in '.?!':
+            clean.append(t[:-1])
+            clean.append(t[-1])
+        else:
+            clean.append(t)
+    return clean
+
+
 def tag_sentence(sentence: str) -> List[Word]:
     """
     Tag an entire sentence.
@@ -854,6 +868,7 @@ def tag_sentence(sentence: str) -> List[Word]:
     """
     # Simple tokenization (split on whitespace)
     tokens = [t for t in sentence.split() if t.strip()]
+    tokens = _split_trailing_punct(tokens)
 
     # Get NLTK tags for the full sentence (context-aware)
     nltk_tags = _get_nltk_tags(tokens)
@@ -961,7 +976,7 @@ def tag_spanish_sentence(sentence: str) -> List[Word]:
         List of Word objects with POS tags and subtypes
     """
     # Simple tokenization (split on whitespace)
-    tokens = sentence.split()
+    tokens = _split_trailing_punct(sentence.split())
 
     words = []
     for token in tokens:
@@ -1211,7 +1226,7 @@ def simple_tag_french(text: str) -> Tag:
 
 def tag_french_sentence(sentence: str) -> List[Word]:
     """Tag a French sentence."""
-    tokens = [t for t in sentence.split() if t.strip()]
+    tokens = _split_trailing_punct([t for t in sentence.split() if t.strip()])
     words = []
     for token in tokens:
         tag = simple_tag_french(token)
@@ -1341,7 +1356,7 @@ def simple_tag_german(text: str) -> Tag:
 
 def tag_german_sentence(sentence: str) -> List[Word]:
     """Tag a German sentence."""
-    tokens = [t for t in sentence.split() if t.strip()]
+    tokens = _split_trailing_punct([t for t in sentence.split() if t.strip()])
     words = []
     for token in tokens:
         tag = simple_tag_german(token)
@@ -1473,7 +1488,7 @@ def simple_tag_portuguese(text: str) -> Tag:
 
 def tag_portuguese_sentence(sentence: str) -> List[Word]:
     """Tag a Portuguese sentence."""
-    tokens = [t for t in sentence.split() if t.strip()]
+    tokens = _split_trailing_punct([t for t in sentence.split() if t.strip()])
     words = []
     for token in tokens:
         tag = simple_tag_portuguese(token)
@@ -1553,7 +1568,7 @@ def simple_tag_japanese(text: str) -> Tag:
 
 def tag_japanese_sentence(sentence: str) -> List[Word]:
     """Tag a Japanese sentence (romanized/romaji)."""
-    tokens = [t for t in sentence.split() if t.strip()]
+    tokens = _split_trailing_punct([t for t in sentence.split() if t.strip()])
     words = []
     for token in tokens:
         tag = simple_tag_japanese(token)

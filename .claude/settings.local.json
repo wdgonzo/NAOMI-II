@@ -19,7 +19,11 @@
       "Bash(grep -r \"def parse\" /c/Users/wgonzalez/Personal/NAOMI-II/src/parser/*.py)",
       "Bash(wc -l /c/Users/wgonzalez/Personal/NAOMI-II/grammars/*.json)",
       "Bash(python3:*)",
-      "Bash(grep -n \"class Match\\\\|def find_matches\\\\|class Rule\\\\|class ConnectionSpec\" /c/Users/wgonzalez/Personal/NAOMI-II/current_work/src/parser/*.py)"
+      "Bash(grep -n \"class Match\\\\|def find_matches\\\\|class Rule\\\\|class ConnectionSpec\" /c/Users/wgonzalez/Personal/NAOMI-II/current_work/src/parser/*.py)",
+      "Bash(ls -lh /c/Users/wgonzalez/Personal/NAOMI-II/current_work/grammars/*.json)",
+      "Bash(printf 't\\\\n1\\\\n2\\\\nThe dog runs\\\\n\\\\nq\\\\n')",
+      "Bash(printf 't\\\\n1\\\\n1\\\\n2\\\\n\\\\nq\\\\n')",
+      "Bash(ls -la /c/Users/wgonzalez/Personal/NAOMI-II/*.py)"
     ],
     "deny": [],
     "ask": []

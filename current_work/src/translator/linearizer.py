@@ -53,6 +53,8 @@ class Linearizer:
         """
         if visited is None:
             visited = set()
+        if node_idx in visited:
+            return []
         visited.add(node_idx)
 
         node = hyp.nodes[node_idx]
@@ -95,9 +97,19 @@ class Linearizer:
         word = node.value.text
         pos = node.value.pos
 
-        # Skip determiners — they are re-inserted at the nominal level
+        # Articles are re-inserted at the nominal level — skip them here.
+        # But possessives, demonstratives, etc. must be translated and kept.
         if pos == Tag.DET:
-            return []
+            articles = {'the', 'a', 'an',
+                        'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
+                        'le', 'la', 'les', 'un', 'une', 'des',
+                        'der', 'die', 'das', 'ein', 'eine',
+                        'o', 'a', 'os', 'as', 'um', 'uma', 'uns', 'umas'}
+            if word.lower() in articles:
+                return []
+            # Non-article determiner: translate and keep
+            target = self.word_lookup.lookup(word, pos)
+            return [target]
         # Skip particles (consumed during parsing; re-inserted for Japanese)
         if pos == Tag.ADP:
             return []
@@ -109,7 +121,7 @@ class Linearizer:
         target_lemma = self.word_lookup.lookup(word, pos)
 
         # Inflect based on POS
-        if pos == Tag.VERB:
+        if pos in (Tag.VERB, Tag.AUX):
             features = list(node.value.subtypes) if node.value.subtypes else []
             if not any(f in features for f in
                        (SubType.FIRST_PERSON, SubType.SECOND_PERSON,
@@ -340,12 +352,23 @@ class Linearizer:
             gender = SubType.MASCULINE
 
         # Separate determiners from adjectives in descriptions
-        has_det = False
+        has_article = False
+        has_non_article_det = False
+        _articles = {'the', 'a', 'an',
+                     'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
+                     'le', 'la', 'les', 'un', 'une', 'des',
+                     'der', 'die', 'das', 'ein', 'eine',
+                     'o', 'a', 'os', 'as', 'um', 'uma', 'uns', 'umas'}
         adj_indices = []
+        non_article_det_indices = []
         for ci, ct in descriptions:
             child_node = hyp.nodes[ci]
             if child_node.value and child_node.value.pos == Tag.DET:
-                has_det = True
+                if child_node.value.text.lower() in _articles:
+                    has_article = True
+                else:
+                    has_non_article_det = True
+                    non_article_det_indices.append(ci)
             else:
                 adj_indices.append(ci)
 
@@ -359,6 +382,7 @@ class Linearizer:
                 adj_surface = self.surface_forms.inflect_adjective(
                     adj_lemma, gender, number)
                 adj_tokens.append(adj_surface)
+                visited.add(ci)
             else:
                 adj_tokens.extend(self.linearize(hyp, ci, ct, visited))
 
@@ -366,25 +390,36 @@ class Linearizer:
         adj_before = self._adjectives_before_noun()
 
         # Build determiner
-        # Insert article if:
-        # 1. Source had a determiner (translate it), OR
-        # 2. Target language requires articles and this is a content noun
+        # Insert definite article ONLY if:
+        # 1. Source had an article (not possessive/demonstrative), OR
+        # 2. Target language requires articles and source had no determiner at all
         #    (handles JA→EN where source has no articles)
+        # Do NOT insert article when source had possessive/demonstrative — those
+        # are already translated and emitted by _translate_leaf.
         det_token = None
-        needs_article = has_det or (
-            self.target_lang in ('english', 'spanish', 'french', 'german',
-                                 'portuguese')
-            and target_noun is not None
-            and node.value and node.value.pos in (Tag.NOUN, Tag.PRON)
-        )
-        if needs_article and self.target_lang != 'japanese':
-            det_token = self.surface_forms.get_definite_article(gender, number)
+        if not has_non_article_det:
+            needs_article = has_article or (
+                self.target_lang in ('english', 'spanish', 'french', 'german',
+                                     'portuguese')
+                and target_noun is not None
+                and node.value and node.value.pos in (Tag.NOUN, Tag.PRON)
+            )
+            if needs_article and self.target_lang != 'japanese':
+                det_token = self.surface_forms.get_definite_article(gender, number)
+
+        # Linearize non-article determiners (possessives, demonstratives)
+        poss_tokens = []
+        for ci in non_article_det_indices:
+            poss_tokens.extend(
+                self.linearize(hyp, ci, ConnectionType.DESCRIPTION, visited))
 
         # Assemble tokens
         tokens = []
 
         if det_token:
             tokens.append(det_token)
+        if poss_tokens:
+            tokens.extend(poss_tokens)
 
         noun_token = [target_noun] if target_noun else []
 
@@ -537,24 +572,33 @@ class Linearizer:
         return before_types, after_types
 
     def _adjectives_before_noun(self) -> bool:
-        """Check if this target language places adjectives before nouns."""
-        # Look at adj/noun rules in target grammar for DESCRIPTION connections
+        """Check if this target language places adjectives before nouns.
+
+        Grammars have two DESCRIPTION connection rules:
+        - noun1 (quantifier='one'): single determiner before noun
+        - noun3 (quantifier='all'): adjective list before/after noun
+        We only care about the 'all' rules (adjectives), not 'one' (determiners).
+        """
         for name in self.grammar.order:
-            if not name.startswith(('adj', 'noun')):
+            if not name.startswith('noun'):
                 continue
             ruleset = self.grammar.rulesets.get(name)
             if not ruleset:
                 continue
             for rule in ruleset.rules:
-                for conn in rule.connections:
-                    if conn.type == ConnectionType.DESCRIPTION:
-                        for ref in [conn.from_ref, conn.to_ref]:
-                            if ref == 'anchor':
-                                continue
-                            if ref.startswith('before'):
-                                return True
-                            if ref.startswith('after'):
-                                return False
+                # Only look at rules with quantifier='all' (adjective lists)
+                has_all_desc_after = any(
+                    p.quantifier == 'all' and p.type == NodeType.DESCRIPTOR
+                    for p in rule.after
+                )
+                has_all_desc_before = any(
+                    p.quantifier == 'all' and p.type == NodeType.DESCRIPTOR
+                    for p in rule.before
+                )
+                if has_all_desc_after:
+                    return False
+                if has_all_desc_before:
+                    return True
 
         # Default by language
         return self.target_lang in ('english', 'german', 'japanese')

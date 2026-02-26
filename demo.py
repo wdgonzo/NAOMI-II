@@ -266,18 +266,32 @@ def render_tree_matplotlib(hypothesis, title: str, ax=None, words_label: str = "
     return ax
 
 
-def _hierarchical_layout(G, hypothesis):
-    """Compute a top-down hierarchical layout for the parse tree."""
+def _hierarchical_layout(G, hypothesis, tree=None):
+    """Compute a top-down hierarchical layout for the parse tree.
+
+    Args:
+        G: NetworkX graph
+        hypothesis: Parse hypothesis
+        tree: Optional bidirectional children dict from _build_bidirectional_children().
+              If provided, uses this for layout instead of raw hypothesis edges.
+              This prevents crossing edges when the graph uses bidirectional traversal.
+    """
     import networkx as nx
 
     unconsumed = hypothesis.get_unconsumed()
     if not unconsumed:
         return nx.spring_layout(G)
 
-    # Build parent->children from edges
-    children_map = {}
-    for edge in hypothesis.edges:
-        children_map.setdefault(edge.parent, []).append(edge.child)
+    # Build parent->children mapping
+    if tree is not None:
+        # Use bidirectional tree (matches the graph edges)
+        children_map = {idx: [child for child, _ in kids]
+                        for idx, kids in tree.items()}
+    else:
+        # Default: unidirectional from hypothesis edges
+        children_map = {}
+        for edge in hypothesis.edges:
+            children_map.setdefault(edge.parent, []).append(edge.child)
 
     # BFS from roots to assign levels
     pos = {}
@@ -299,15 +313,15 @@ def _hierarchical_layout(G, hypothesis):
     for level, nodes in level_nodes.items():
         n = len(nodes)
         for i, node in enumerate(nodes):
-            x = (i - (n - 1) / 2) * 1.5
-            y = -level * 1.5
+            x = (i - (n - 1) / 2) * 2.5
+            y = -level * 2.0
             pos[node] = (x, y)
 
     # Spread disconnected nodes instead of stacking at one point
     unplaced = [n for n in G.nodes() if n not in pos]
     for i, node in enumerate(unplaced):
-        x = (i - (len(unplaced) - 1) / 2) * 1.5
-        pos[node] = (x, -(max_level + 1) * 1.5)
+        x = (i - (len(unplaced) - 1) / 2) * 2.5
+        pos[node] = (x, -(max_level + 1) * 2.0)
 
     return pos
 
@@ -463,29 +477,23 @@ def _build_bilingual_labels(hypothesis, word_lookup: WordLookup,
     """
     Build bilingual labels for every node: {node_idx: (source_word, target_word)}.
 
-    For determiners (function words), looks up the target article using the
-    noun's gender from the surface_forms module.
+    Shows the actual surface form for verbs (conjugated, not infinitive) and
+    uses word_lookup for all word types including determiners.
     """
-    from src.parser.enums import Tag
+    from src.parser.enums import Tag, SubType
 
-    # Determiner translation table
-    DET_MAP = {
+    # Article translation (for determiners that are articles)
+    _ARTICLE_MAP = {
         'english': {'el': 'the', 'la': 'the', 'los': 'the', 'las': 'the',
-                    'le': 'the', 'la': 'the', 'les': 'the',
+                    'le': 'the', 'les': 'the',
                     'der': 'the', 'die': 'the', 'das': 'the',
-                    'o': 'the', 'a': 'the', 'os': 'the', 'as': 'the'},
-        'spanish': {'the': 'el', 'le': 'el', 'la': 'la', 'der': 'el',
-                    'die': 'la', 'das': 'el', 'o': 'el', 'a': 'la'},
-        'french': {'the': 'le', 'el': 'le', 'la': 'la', 'der': 'le',
-                   'die': 'la', 'das': 'le', 'o': 'le', 'a': 'la'},
-        'german': {'the': 'der', 'el': 'der', 'la': 'die', 'le': 'der',
-                   'o': 'der', 'a': 'die'},
-        'portuguese': {'the': 'o', 'el': 'o', 'la': 'a', 'le': 'o',
-                       'der': 'o', 'die': 'a', 'das': 'o'},
-        'japanese': {},  # No articles
+                    'o': 'the', 'os': 'the', 'as': 'the'},
+        'spanish': {'the': 'el', 'le': 'el', 'der': 'el', 'o': 'el'},
+        'french': {'the': 'le', 'el': 'le', 'der': 'le', 'o': 'le'},
+        'german': {'the': 'der', 'el': 'der', 'le': 'der', 'o': 'der'},
+        'portuguese': {'the': 'o', 'el': 'o', 'le': 'o', 'der': 'o'},
+        'japanese': {},
     }
-
-    target_dets = DET_MAP.get(word_lookup.target_lang, {})
 
     labels = {}
     for i, node in enumerate(hypothesis.nodes):
@@ -496,13 +504,33 @@ def _build_bilingual_labels(hypothesis, word_lookup: WordLookup,
         src_word = node.value.text
         pos = node.value.pos
 
-        # Determiners: use article mapping
+        # Verbs: show conjugated target form, not infinitive
+        if pos == Tag.VERB and surface_forms:
+            target_lemma = word_lookup.lookup(src_word, pos)
+            features = list(node.value.subtypes) if node.value.subtypes else []
+            if not any(f in features for f in
+                       (SubType.FIRST_PERSON, SubType.SECOND_PERSON,
+                        SubType.THIRD_PERSON)):
+                features.append(SubType.THIRD_PERSON)
+            if not any(f in features for f in
+                       (SubType.SINGULAR, SubType.PLURAL)):
+                features.append(SubType.SINGULAR)
+            tgt_word = surface_forms.conjugate_verb(target_lemma, features)
+            labels[i] = (src_word, tgt_word)
+            continue
+
+        # Determiners: try word_lookup first (catches possessives/demonstratives),
+        # fall back to article map for basic articles
         if pos == Tag.DET:
-            tgt = target_dets.get(src_word.lower(), src_word)
+            tgt = word_lookup.lookup(src_word, pos)
+            if tgt == src_word and word_lookup.source_lang != word_lookup.target_lang:
+                # Lookup didn't find it — try article map
+                article_map = _ARTICLE_MAP.get(word_lookup.target_lang, {})
+                tgt = article_map.get(src_word.lower(), src_word)
             labels[i] = (src_word, tgt)
             continue
 
-        # Content words: use word lookup
+        # All other words: use word lookup
         tgt_word = word_lookup.lookup(src_word, pos)
         labels[i] = (src_word, tgt_word)
 
@@ -542,7 +570,8 @@ def _build_bidirectional_children(hypothesis):
 
 
 def print_bilingual_tree(hypothesis, word_lookup: WordLookup,
-                         src_code: str, tgt_code: str):
+                         src_code: str, tgt_code: str,
+                         surface_forms=None):
     """
     Print a bilingual intermediary tree showing source/target words at each node.
 
@@ -555,7 +584,7 @@ def print_bilingual_tree(hypothesis, word_lookup: WordLookup,
                 +-- The/El (DESCRIPTOR)
                 +-- dog/perro (NOMINAL <- NOUN)
     """
-    labels = _build_bilingual_labels(hypothesis, word_lookup)
+    labels = _build_bilingual_labels(hypothesis, word_lookup, surface_forms)
     unconsumed = hypothesis.get_unconsumed()
     tree = _build_bidirectional_children(hypothesis)
 
@@ -609,7 +638,8 @@ def _print_bilingual_recursive(hyp, node_idx, tree, labels,
 
 
 def render_bilingual_tree_matplotlib(hypothesis, word_lookup: WordLookup,
-                                     title: str, ax=None):
+                                     title: str, ax=None,
+                                     surface_forms=None):
     """Render a bilingual tree using matplotlib — each node shows source/target."""
     try:
         import matplotlib.pyplot as plt
@@ -625,7 +655,7 @@ def render_bilingual_tree_matplotlib(hypothesis, word_lookup: WordLookup,
             ax.set_title(title)
         return None
 
-    bilabels = _build_bilingual_labels(hypothesis, word_lookup)
+    bilabels = _build_bilingual_labels(hypothesis, word_lookup, surface_forms)
     tree = _build_bidirectional_children(hypothesis)
 
     G = nx.DiGraph()
@@ -661,17 +691,22 @@ def render_bilingual_tree_matplotlib(hypothesis, word_lookup: WordLookup,
     if not G.nodes():
         return None
 
-    pos = _hierarchical_layout(G, hypothesis)
+    # Use bidirectional tree for layout so edges don't cross
+    pos = _hierarchical_layout(G, hypothesis, tree=tree)
+
+    # Dynamic node sizing based on label length
+    max_label_len = max(len(l) for l in labels.values()) if labels else 15
+    node_size = max(4500, max_label_len * 220)
 
     if ax is None:
-        fig, ax = plt.subplots(1, 1, figsize=(12, 7))
+        fig, ax = plt.subplots(1, 1, figsize=(14, 8))
 
     nx.draw(
         G, pos, ax=ax,
         labels=labels,
         node_color=colors,
-        node_size=3000,
-        font_size=7,
+        node_size=node_size,
+        font_size=6,
         font_weight="bold",
         arrows=True,
         arrowsize=15,
@@ -829,7 +864,8 @@ def mode_translate():
         return
 
     # Show bilingual intermediary tree
-    print_bilingual_tree(hyp, translator.word_lookup, src_code, tgt_code)
+    print_bilingual_tree(hyp, translator.word_lookup, src_code, tgt_code,
+                         surface_forms=translator.surface_forms)
 
     print("  " + "-" * 50)
     print(f'  {src_code}: "{sentence}"')
@@ -841,10 +877,11 @@ def mode_translate():
         resp = input("\n  Show bilingual tree visualization? [y/N] ").strip().lower()
         if resp == "y":
             import matplotlib.pyplot as plt
-            fig, ax = plt.subplots(1, 1, figsize=(12, 7))
+            fig, ax = plt.subplots(1, 1, figsize=(14, 8))
             title = f"Translation: {src_code} -> {tgt_code}"
             render_bilingual_tree_matplotlib(
-                hyp, translator.word_lookup, title, ax=ax)
+                hyp, translator.word_lookup, title, ax=ax,
+                surface_forms=translator.surface_forms)
             plt.tight_layout()
             plt.show()
     except (EOFError, KeyboardInterrupt):

@@ -74,8 +74,15 @@ class Translator:
         if not tokens:
             return ""
 
-        # Join with spaces
-        result = ' '.join(tokens)
+        # Join tokens, attaching punctuation without leading space
+        result = ''
+        for t in tokens:
+            if t in '.?!,;:' and result:
+                result += t
+            else:
+                if result:
+                    result += ' '
+                result += t
 
         # Capitalize first letter (except Japanese which uses romaji lowercase)
         if self.target_lang != 'japanese':

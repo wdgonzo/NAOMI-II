@@ -159,10 +159,45 @@ def test_en_to_es_transitive_full():
     t = Translator("english", "spanish")
     result = t.translate(hyp)
     print(f"  Result: '{result}'")
-    # Check key words are present and in right order
     lower = result.lower()
     assert "perro" in lower, f"Missing 'perro' in '{result}'"
     assert "corre" in lower, f"Missing 'corre' in '{result}'"
+    # Adjective must be AFTER noun in Spanish (post-nominal)
+    perro_idx = lower.index("perro")
+    if "grande" in lower:
+        grande_idx = lower.index("grande")
+        assert grande_idx > perro_idx, \
+            f"Adjective should be after noun in Spanish: '{result}'"
+    print("  [OK]")
+    print()
+
+
+def test_possessive_en_to_es():
+    """'My dog runs' -> 'Mi perro corre'"""
+    print("=== EN -> ES: My dog runs ===")
+    hyp = parse("My dog runs", "english")
+    t = Translator("english", "spanish")
+    result = t.translate(hyp)
+    print(f"  Result: '{result}'")
+    lower = result.lower()
+    assert "mi" in lower, f"Missing possessive 'mi' in '{result}'"
+    assert "perro" in lower, f"Missing 'perro' in '{result}'"
+    assert "corre" in lower, f"Missing 'corre' in '{result}'"
+    print("  [OK]")
+    print()
+
+
+def test_new_vocab_en_to_es():
+    """'The mother loves the child' -> 'La madre ama el niño'"""
+    print("=== EN -> ES: The mother loves the child ===")
+    hyp = parse("The mother loves the child", "english")
+    t = Translator("english", "spanish")
+    result = t.translate(hyp)
+    print(f"  Result: '{result}'")
+    lower = result.lower()
+    assert "madre" in lower, f"Missing 'madre' in '{result}'"
+    assert "ama" in lower, f"Missing 'ama' in '{result}'"
+    assert "niño" in lower, f"Missing 'niño' in '{result}'"
     print("  [OK]")
     print()
 
@@ -203,6 +238,8 @@ if __name__ == "__main__":
         test_es_to_en_intransitive,
         test_ja_to_en_intransitive,
         test_en_to_es_transitive_full,
+        test_possessive_en_to_es,
+        test_new_vocab_en_to_es,
         test_coordination,
     ]
 
