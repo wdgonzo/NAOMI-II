@@ -198,6 +198,9 @@ def test_new_vocab_en_to_es():
     assert "madre" in lower, f"Missing 'madre' in '{result}'"
     assert "ama" in lower, f"Missing 'ama' in '{result}'"
     assert "niño" in lower, f"Missing 'niño' in '{result}'"
+    # Feminine article for 'madre'
+    assert "la madre" in lower, \
+        f"Expected 'la madre' (feminine article) in '{result}'"
     print("  [OK]")
     print()
 
@@ -213,6 +216,192 @@ def test_coordination():
     assert "perro" in lower, f"Missing 'perro' in '{result}'"
     assert "gato" in lower, f"Missing 'gato' in '{result}'"
     assert "y" in lower, f"Missing 'y' in '{result}'"
+    print("  [OK]")
+    print()
+
+
+def test_morphology_verb_conjugation():
+    """Test rule-based verb conjugation directly."""
+    print("=== Morphology: Verb conjugation ===")
+    from src.translator.morphology import MorphologyEngine
+    from src.parser.enums import SubType
+
+    # Spanish regular -ar verb
+    es = MorphologyEngine('spanish')
+    assert es.conjugate_verb('hablar', SubType.THIRD_PERSON, SubType.SINGULAR) == 'habla'
+    assert es.conjugate_verb('hablar', SubType.FIRST_PERSON, SubType.SINGULAR) == 'hablo'
+    assert es.conjugate_verb('hablar', SubType.FIRST_PERSON, SubType.PLURAL) == 'hablamos'
+
+    # Spanish regular -er verb
+    assert es.conjugate_verb('comer', SubType.THIRD_PERSON, SubType.SINGULAR) == 'come'
+
+    # Spanish regular -ir verb
+    assert es.conjugate_verb('vivir', SubType.THIRD_PERSON, SubType.SINGULAR) == 'vive'
+
+    # Spanish irregular verb
+    assert es.conjugate_verb('ser', SubType.THIRD_PERSON, SubType.SINGULAR) == 'es'
+    assert es.conjugate_verb('ir', SubType.THIRD_PERSON, SubType.SINGULAR) == 'va'
+
+    # Spanish stem-changer (e->ie)
+    assert es.conjugate_verb('pensar', SubType.THIRD_PERSON, SubType.SINGULAR) == 'piensa'
+    assert es.conjugate_verb('pensar', SubType.FIRST_PERSON, SubType.PLURAL) == 'pensamos'
+
+    # Spanish stem-changer (o->ue)
+    assert es.conjugate_verb('dormir', SubType.THIRD_PERSON, SubType.SINGULAR) == 'duerme'
+
+    # Spanish stem-changer (e->i)
+    assert es.conjugate_verb('perseguir', SubType.THIRD_PERSON, SubType.SINGULAR) == 'persigue'
+
+    # French irregular
+    fr = MorphologyEngine('french')
+    assert fr.conjugate_verb('être', SubType.THIRD_PERSON, SubType.SINGULAR) == 'est'
+    assert fr.conjugate_verb('courir', SubType.THIRD_PERSON, SubType.SINGULAR) == 'court'
+
+    # French regular -er
+    assert fr.conjugate_verb('parler', SubType.THIRD_PERSON, SubType.SINGULAR) == 'parle'
+
+    # German irregular
+    de = MorphologyEngine('german')
+    assert de.conjugate_verb('sein', SubType.THIRD_PERSON, SubType.SINGULAR) == 'ist'
+
+    # German regular
+    assert de.conjugate_verb('rennen', SubType.THIRD_PERSON, SubType.SINGULAR) == 'rennt'
+
+    # German stem-vowel change
+    assert de.conjugate_verb('sehen', SubType.THIRD_PERSON, SubType.SINGULAR) == 'sieht'
+    assert de.conjugate_verb('schlafen', SubType.THIRD_PERSON, SubType.SINGULAR) == 'schläft'
+
+    # Portuguese irregular
+    pt = MorphologyEngine('portuguese')
+    assert pt.conjugate_verb('ser', SubType.THIRD_PERSON, SubType.SINGULAR) == 'é'
+
+    # Portuguese regular -er
+    assert pt.conjugate_verb('correr', SubType.THIRD_PERSON, SubType.SINGULAR) == 'corre'
+
+    # English 3rd person
+    en = MorphologyEngine('english')
+    assert en.conjugate_verb('run', SubType.THIRD_PERSON, SubType.SINGULAR) == 'runs'
+    assert en.conjugate_verb('chase', SubType.THIRD_PERSON, SubType.SINGULAR) == 'chases'
+    assert en.conjugate_verb('fly', SubType.THIRD_PERSON, SubType.SINGULAR) == 'flies'
+    assert en.conjugate_verb('have', SubType.THIRD_PERSON, SubType.SINGULAR) == 'has'
+
+    print("  [OK]")
+    print()
+
+
+def test_morphology_gender_detection():
+    """Test rule-based gender detection."""
+    print("=== Morphology: Gender detection ===")
+    from src.translator.morphology import MorphologyEngine
+    from src.parser.enums import SubType
+
+    es = MorphologyEngine('spanish')
+    # -o masculine
+    assert es.detect_gender('perro') == SubType.MASCULINE
+    assert es.detect_gender('gato') == SubType.MASCULINE
+    # -a feminine
+    assert es.detect_gender('casa') == SubType.FEMININE
+    assert es.detect_gender('mesa') == SubType.FEMININE
+    # Exceptions
+    assert es.detect_gender('mano') == SubType.FEMININE
+    assert es.detect_gender('día') == SubType.MASCULINE
+    assert es.detect_gender('madre') == SubType.FEMININE
+    assert es.detect_gender('flor') == SubType.FEMININE
+    # Suffix heuristics
+    assert es.detect_gender('ciudad') == SubType.FEMININE  # -dad ending
+    assert es.detect_gender('nación') == SubType.FEMININE  # -ción ending
+
+    # French
+    fr = MorphologyEngine('french')
+    assert fr.detect_gender('mère') == SubType.FEMININE
+    assert fr.detect_gender('maison') == SubType.FEMININE
+    assert fr.detect_gender('homme') == SubType.MASCULINE
+
+    # German (manual table)
+    de = MorphologyEngine('german')
+    assert de.detect_gender('Hund') == SubType.MASCULINE
+    assert de.detect_gender('Katze') == SubType.FEMININE
+    assert de.detect_gender('Haus') == SubType.NEUTER
+
+    # English/Japanese return None
+    en = MorphologyEngine('english')
+    assert en.detect_gender('dog') is None
+
+    print("  [OK]")
+    print()
+
+
+def test_morphology_adjective_inflection():
+    """Test rule-based adjective inflection."""
+    print("=== Morphology: Adjective inflection ===")
+    from src.translator.morphology import MorphologyEngine
+    from src.parser.enums import SubType
+
+    es = MorphologyEngine('spanish')
+    # -o adjective: 4-form
+    assert es.inflect_adjective('blanco', SubType.FEMININE) == 'blanca'
+    assert es.inflect_adjective('blanco', SubType.MASCULINE, SubType.PLURAL) == 'blancos'
+    assert es.inflect_adjective('blanco', SubType.FEMININE, SubType.PLURAL) == 'blancas'
+    # -e adjective: invariant gender
+    assert es.inflect_adjective('grande', SubType.FEMININE) == 'grande'
+    assert es.inflect_adjective('grande', SubType.MASCULINE, SubType.PLURAL) == 'grandes'
+    # consonant: invariant gender, +es plural
+    assert es.inflect_adjective('feliz', SubType.FEMININE) == 'feliz'
+    assert es.inflect_adjective('feliz', SubType.MASCULINE, SubType.PLURAL) == 'felices'
+
+    # French irregular
+    fr = MorphologyEngine('french')
+    assert fr.inflect_adjective('blanc', SubType.FEMININE) == 'blanche'
+    assert fr.inflect_adjective('beau', SubType.FEMININE) == 'belle'
+
+    # English: no inflection
+    en = MorphologyEngine('english')
+    assert en.inflect_adjective('big', SubType.FEMININE) == 'big'
+
+    print("  [OK]")
+    print()
+
+
+def test_feminine_article_agreement():
+    """Test that feminine nouns get correct articles across languages."""
+    print("=== Feminine article agreement ===")
+
+    # Spanish: La casa blanca
+    hyp = parse("The white house", "english")
+    t = Translator("english", "spanish")
+    result = t.translate(hyp)
+    print(f"  EN->ES 'The white house': '{result}'")
+    assert "la casa" in result.lower(), \
+        f"Expected feminine 'la casa', got '{result}'"
+
+    # French: La maison blanche
+    t = Translator("english", "french")
+    result = t.translate(hyp)
+    print(f"  EN->FR 'The white house': '{result}'")
+    assert "la maison" in result.lower(), \
+        f"Expected feminine 'la maison', got '{result}'"
+
+    # German: Das Haus (neuter)
+    t = Translator("english", "german")
+    result = t.translate(hyp)
+    print(f"  EN->DE 'The white house': '{result}'")
+    assert "das" in result.lower(), \
+        f"Expected neuter 'das' for Haus, got '{result}'"
+
+    print("  [OK]")
+    print()
+
+
+def test_question_sentence():
+    """'what is your favorite color' -> Spanish translation."""
+    print("=== EN -> ES: what is your favorite color ===")
+    hyp = parse("what is your favorite color", "english")
+    t = Translator("english", "spanish")
+    result = t.translate(hyp)
+    print(f"  Result: '{result}'")
+    lower = result.lower()
+    assert "color" in lower, f"Missing 'color' in '{result}'"
+    assert "favorito" in lower, f"Missing 'favorito' in '{result}'"
     print("  [OK]")
     print()
 
@@ -241,6 +430,11 @@ if __name__ == "__main__":
         test_possessive_en_to_es,
         test_new_vocab_en_to_es,
         test_coordination,
+        test_morphology_verb_conjugation,
+        test_morphology_gender_detection,
+        test_morphology_adjective_inflection,
+        test_feminine_article_agreement,
+        test_question_sentence,
     ]
 
     for test_fn in tests:
